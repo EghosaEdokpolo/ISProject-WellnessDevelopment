@@ -11,7 +11,7 @@ body{
     depending on the dimension of the screen they are on*/  
     min-height: 100vh; 
     overflow-x: hidden;       
-
+}
     
     /* custom styling for things with id's */
     #loginstrathlogo{
@@ -74,7 +74,7 @@ body{
         margin: auto;
         padding: 12px;
         font-size: larger;
-        background-color: rgb(215, 4, 4);     /* Strathmore Blue */
+        background-color: rgb(204, 156, 74);     /* Strathmore Blue */
         color: white;
         font-weight: bold;
         border: none;
@@ -83,7 +83,7 @@ body{
     }
     
     .loginbutton:active{
-        background-color: rgb(165, 3, 3);
+        background-color: rgb(139, 105, 47);
     }
 
     /* styling the link */
@@ -118,4 +118,3 @@ body{
         /* This forces the footer to strictly sit at the baseline */
         margin-top: auto;
     }
-}

@@ -36,20 +36,54 @@
 
         <!--page details-->
         <div>
-            <h3>Create & Publish Events</h3>
+            <h2>Create & Publish Events</h2>
+            <!--form section starts here-->
+            <form action="https://httpbin.org/get" method="get">
+                
+                <label for="eventName">Event Name <br></label>
+                <input type="text" name="eventName" id="eventName" required>
+                </p>
 
-            <h5>Event name</h5>
+                <p>
+                <label for="eventName">Date<br></label>
+                <input type="date" name="date" id="date" required>
+                </p>
+                
+                <p>
+                <label for="location">Location <br></label>
+                <input type="text" name="location" id="location" required placeholder="Room/Venue">
+                </p>
 
-            <h5>Date</h5>  
+                <p>
+                <h2>Wellness Category</h2>
+                
+                <input type="radio" name="wellcat" id="physical" value="physical" required>
+                <label for="physical">Physical</label>
 
-            <h5>Location</h5>
 
-            <h5>Wellness Category</h5>
-            to be added as single page html developemnt
+                
+                <input type="radio" name="wellcat" id="mental" value="mental">
+                <label for="mental">Mental</label>
+                
 
-            <h5>Description</h5>
+                
+                <input type="radio" name="wellcat" id="financial" value="financial">
+                <label for="financial">Financial</label>
+                
 
-            publish button
+                
+                <input type="radio" name="wellcat" id="social" value="social">
+                <label for="social">Social</label>
+                
+            <p>
+                <label for="description">Description</label> 
+                <br>
+                <textarea name="description" id="description" cols="30" rows="3" required></textarea>
+            </p>
+            
+            <button type="submit">Publish Event</button>
+
+            </form>
         </div>
 
         <div>

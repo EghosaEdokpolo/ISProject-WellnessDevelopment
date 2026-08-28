@@ -1,0 +1,130 @@
+/* main page attribute for all linked pages */
+body{
+    font-family: Arial, Helvetica, sans-serif; 
+    background-color: (245, 245, 240);  
+    margin: 0;
+    padding: 0;
+    width: 100%;
+
+    overflow-x: hidden;
+}
+
+/* !!!!headers styling accross pages!!!! */
+
+.header-title{
+    
+    /* colouring and position*/
+    background-color: rgb(2, 51, 141);
+    padding: 10px;
+    color: white;
+    padding-left: 5%;
+    font-size: larger;
+    align-items: center;
+    display: flex;
+
+}
+
+.header-title img{
+    height: 50px;
+    width: auto;
+    margin-right: 10px;
+    margin-bottom: auto;
+}
+
+.category-label{
+    color: #6a7e9a; /* Default text color for category labels */
+}
+
+ .nav-head nav{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: medium;
+    background-color: white;
+    box-shadow: 0px 1px 5px black;
+    width: 100%;
+
+    /* include an element's padding and border within its total specified width and
+    height making the content inside smaller rather than expand the page */
+    box-sizing: border-box;
+    
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+}
+
+.nav-menu{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    
+    /* allows layout to drop items down if it runs out of width space */
+    flex-wrap: wrap;
+}
+
+.pillgroup1 {
+    background-color: #f5f4f0; 
+    padding: 7px 18px;
+    border-radius: 26px;       
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+} 
+
+.nav-link{
+    /* makes children inline(side by side) while still
+     being affected by other elements */
+    display: inline-flex;
+
+    align-items: center;
+    gap: 8px;                  
+    text-decoration: none;
+    color: #000000;            
+    font-weight: 500;
+    font-size: 14px;
+    padding: 7px 16px;
+    border-radius: 20px;   
+
+    /* smooth transition in and out     */
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    color: rgb(7, 59, 156);
+    background-color: rgba(245, 185, 81, 0.3);
+}
+
+.nav-link.active {
+    background-color: rgb(204, 156, 74); /* Solid primary blue block background */
+    color: white;              /* White text string */
+}
+
+.nav-icon{
+    width: 20px;
+    height: 20px;
+
+    /* ensures the icon maintains its aspect ratio */
+    object-fit: contain;
+
+    /* smooth animation changes */
+    transition: filter 0.2s;
+}
+
+/* handles the active icon */
+.nav-link.active .nav-icon {
+    filter: brightness(0) invert(1); 
+}
+
+#retention-icon {
+    scale: 150%;
+}
+
+#impact-icon {
+    scale: 130%;
+}
+
+
+
+/* !!!!main page general styling!!!! */

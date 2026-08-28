@@ -35,6 +35,12 @@ body{
     color: #6a7e9a; /* Default text color for category labels */
 }
 
+.nav-head {
+    position: sticky;
+    top: 0;
+    z-index: 1000; 
+}   
+
  .nav-head nav{
     padding-top: 10px;
     padding-bottom: 10px;
@@ -47,7 +53,7 @@ body{
     height making the content inside smaller rather than expand the page */
     box-sizing: border-box;
     
-    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
 .nav-menu{
@@ -61,6 +67,7 @@ body{
     
     /* allows layout to drop items down if it runs out of width space */
     flex-wrap: wrap;
+
 }
 
 .pillgroup1 {

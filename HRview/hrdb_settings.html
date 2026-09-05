@@ -11,79 +11,138 @@
 
         <!--favicon-->
         <link rel="icon" href="../assets/Strathmore_uni_logo-notext.png" type="image/x-icon">
+        
+        <link rel="stylesheet" href="../css/hr_view_style.css">
     </head>
 
     <body>
-        <!--data about the page that is seen-->
-        <p>Strathmore University - Wellness Programme Management & Impact System (WPIMS)</p>
+           <!--data about the page that is seen-->
+            <div class="header-title">
+                <img src="../assets/Strathmore_uni_logo-notext.png" alt="Strathmore University Logo">
+                Strathmore University - Wellness Programme Management & Impact System (WPMIS)
+            </div>
 
-        Dashboards 
-        <!--first category at the top of the page-->
-        <nav>
-            <a href="hrdb_overview.html">Overview</a> 
-            <a href="hrdb_impact.html">impact</a> 
-            <a href="hrdb_retention.html">Retention</a>
-            <a href="hrdb_departmental.html">Departmental</a>
-            
-            <!--second category at the top of the page-->
-            <a href="hrdb_attendeetable.html">Attendees</a> 
-            <a href="hrdb_eventsmanagement.html">Events</a> 
-            <a href="hrdb_settings.html">Settings</a>
-        </nav>
+        <header class="nav-head">
+            <!--first category at the top of the page-->
+            <!--navigation links-->
+            <nav class="nav-menu">
+                <div class="pillgroup1">
+                    <span class="category-label">Dashboards</span> 
+
+                    <a href="hrdb_overview.html" class="nav-link"> 
+                        <img src="/images/analytics-icon.png" alt="analytics icon" class="nav-icon"> Overview
+                    </a> 
+
+                    <a href="hrdb_impact.html" class="nav-link">
+                        <img src="/images/Impact-icon.png" alt="impact icon" class="nav-icon" id="impact-icon">Impact
+                    </a> 
+
+                    <a href="hrdb_retention.html" class="nav-link">
+                       <img src="/images/retention-icon1.png" alt="retention icon" class="nav-icon" id="retention-icon"> Retention
+                    </a>
+
+                    <a href="hrdb_departmental.html" class="nav-link">
+                        <img src="/images/department-icon.png" alt="department icon" class="nav-icon">Departmental
+                    </a>
+                </div>
+                
+                <!--second category at the top of the page-->
+                <a href="hrdb_attendeetable.html" class="nav-link">
+                    <img src="/images/attendance-icon.png" alt="attendees icon" class="nav-icon">Attendees
+                </a> 
+
+                <a href="hrdb_eventsmanagement.html" class="nav-link">
+                    <img src="/images/events-icon.png" alt="events icon" class="nav-icon"> Events
+                </a> 
+
+                <a href="hrdb_settings.html" class="nav-link active">
+                    <img src="/images/settings-icon.png" alt="settings icon" class="nav-icon">Settings
+                </a>
+            </nav>
+        </header>
 
         <!--Title-->
         <h1>Settings</h1>
+        <main>
+                <!--page details-->
+                <div class="dashboard-row">
+                        
+                <div class="container reset_control">
+                
+                        <h2 class="mini-h2">Points Reset Control</h2>
+                        <span class="mini-description">Points reset annually. This action is irreversible; all staff balances will be zeroed.</span>
 
-        <!--page details-->
-        <div>
-            <h3>Points reset control</h3>
-            <p>Points reset annually. This action is irreversible; all staff balances will be zeroed.</p>
+                        <div class="mini_container2">
+                            <p id="mc2_name">Current cycle: <span> current year</span></p>
+                            <p id="mc2_name">Next Reset: <span> curent year plus 1</span></p>
+                            
+                        </div>
 
-            <p>reset button here</p>
-        </div>
+                        <button type="submit" id="reset">Reset All Staff Points</button>
+                </div>
 
-        <div>
-            <h3>Data Protection Details</h3>
+                <div class="container dataProtection">
+                    <h2 class="mini-h2">Data Protection Details</h2>
 
-            <div class="data-table">
-            <!-- Row 1 -->
-                <div class="data-row">
-                <div class="data-label">Data Controller</div>
-                <div class="data-value">Strathmore University, Madaraka Estate, Nairobi</div>
+                    <table class="data-protection-table">
+                        <tbody>
+                        <!--row 1-->
+                            <tr>
+                                <td class="tdlabel">
+                                    Data Controller
+                                </td>
+                                <td>
+                                    Strathmore University, Madaraka Estate, Nairobi
+                                </td>
+                            </tr>
+
+                        <!-- Row 2 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    Applicable Law
+                                </td>
+                                <td>
+                                    Kenya Data Protection Act, 2019
+                                </td>
+                            </tr>
+
+                        <!-- row 3 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    Retention Period
+                                </td>
+                                <td>
+                                    1 academic year from event date
+                                </td>
+                            </tr>
+
+                        <!-- row 4 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    Contact
+                                </td>
+                                <td>
+                                    dataprotection@strathmore.edu
+                                </td>
+                            </tr>
+
+                        <!-- row 5 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    DPIA Status
+                                </td>
+                                <td>
+                                    Initial DPIA completed - xxxx
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
             </div>
 
-            <!-- Row 2 -->
-            <div class="data-row">
-                <div class="data-label">Applicable Law</div>
-                <div class="data-value">Kenya Data Protection Act, 2019</div>
-            </div>
+            <button type="submit" id="logout">Logout</button>
 
-            <!-- Row 3 -->
-            <div class="data-row">
-                <div class="data-label">Retention Period</div>
-                <div class="data-value">1 academic year from event date</div>
-            </div>
-
-            <!-- Row 4 -->
-            <div class="data-row">
-                <div class="data-label">Contact</div>
-                <div class="data-value">dataprotection@strathmore.edu</div>
-            </div>
-
-            <!-- Row 5 -->
-            <div class="data-row">
-                <div class="data-label">DPIA Status</div>
-                <div class="data-value">Initial DPIA completed - xxxx</div>
-            </div>
-        </div>
-    </div>
-
-
-        <div>
-            <br>
-            Accesibility Settings
-            idk to be further discussed
-        </div>
-        
+        </main>
     </body>
 </html>

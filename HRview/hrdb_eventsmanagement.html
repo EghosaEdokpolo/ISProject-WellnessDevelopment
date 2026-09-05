@@ -64,67 +64,180 @@
         <!--Title-->
         <h1>Manage Events</h1>
 
-        <!--page details-->
-        <div>
-            <h2>Create & Publish Events</h2>
-            <!--form section starts here-->
-            <form action="https://httpbin.org/get" method="get">
+        <main>
+            <!-- 1. The structural flex layout wrapper row starts here -->
+            <div class="dashboard-row">
                 
-                <label for="eventName">Event Name <br></label>
-                <input type="text" name="eventName" id="eventName" required>
+                <!-- FIRST CARD: Create and Publish -->
+                <div class="container candpevents">
+                    <h2>Create & Publish Events</h2>
+                    
+                    <form action="https://httpbin.org/get" method="get">
+                        <p>
+                            <label for="eventName" class="form_labels">Event Name <br></label>
+                            <input type="text" name="eventName" id="eventName" required>
+                        </p>
+
+                        <p>
+                            <label for="date" class="form_labels">Date<br></label>
+                            <input type="date" name="date" id="date" required>
+                        </p>
+                        
+                        <p>
+                            <label for="location" class="form_labels">Location <br></label>
+                            <input type="text" name="location" id="location" required placeholder="Room/Venue">
+                        </p>
+
+                        <p class="form_labels">Wellness Category</p>
+                        <div>
+                            <input type="radio" name="wellcat" id="physical" value="physical" required>
+                            <label for="physical">Physical</label>
+
+                            <input type="radio" name="wellcat" id="mental" value="mental">
+                            <label for="mental">Mental</label>
+                            
+                            <input type="radio" name="wellcat" id="financial" value="financial">
+                            <label for="financial">Financial</label>
+                            
+                            <input type="radio" name="wellcat" id="social" value="social">
+                            <label for="social">Social</label>
+                        </div>
+                        
+                        <p>
+                            <label for="description" class="form_labels">Description</label> <br>
+                            <textarea name="description" id="description" cols="30" rows="3" required></textarea>
+                        </p>
+                        
+                        <button type="submit" id="publish">Publish Event</button>
+                    </form>
+                </div> <!-- Closes Card 1 safely -->
+
+                <!-- SECOND CARD: Send Awareness Communication -->
+                <div class="container awareness-box">
+                    <h2>Send Awareness Communication</h2>
+
+                    <p class="minidescription">Email + Google Calendar invite to all selected staff members.</p>
+
+                        <!-- after the event has been made, the db will have the event
+                        details that can be selected for sending the specific communication. -->
+                <form action="https://httpbin.org/post" method="post">
+                <p>
+                <label for="eventcategory" class="form_labels">Select An Event To Send An Email For</label> <br>
+                        <input type="text" name="eventcategory" id="eventcategory" list="eventlist" required>    
+                    <datalist id="eventlist">
+                            <option value="Gotten from DB">
+                    </datalist>
                 </p>
 
                 <p>
-                <label for="eventName">Date<br></label>
-                <input type="date" name="date" id="date" required>
+                    <!-- invitee selection -->
+                    <label for="emailcategory" class="form_labels">Select Invitee Category</label> <br>
+                        <input type="text" name="emailcategory" id="emailcategory" list="invitelist" required>    
+                    <datalist id="invitelist">
+                            <option value="All staff">
+                            <option value="Female staff">
+                            <option value="Male staff">
+                            <option value="Cafeteria staff">
+                            <option value="Housekeeping staff">
+                            <option value="SCES">
+                            <option value="STH">
+                    </datalist>
                 </p>
-                
-                <p>
-                <label for="location">Location <br></label>
-                <input type="text" name="location" id="location" required placeholder="Room/Venue">
-                </p>
-
-                <p>
-                <h2>Wellness Category</h2>
-                
-                <input type="radio" name="wellcat" id="physical" value="physical" required>
-                <label for="physical">Physical</label>
 
 
-                
-                <input type="radio" name="wellcat" id="mental" value="mental">
-                <label for="mental">Mental</label>
-                
+                    <!-- display the venue from the selected event. -->
+                    
+                        <span class="form_labels">Event Details</span> <br>
+                            <div class="mini_container">
+                                <div class="dynamic-scroll-wrapper">
+                                <!-- Event details will be dynamically populated here from the database -->
+                                </div>
+                            </div>
 
-                
-                <input type="radio" name="wellcat" id="financial" value="financial">
-                <label for="financial">Financial</label>
-                
+                        <button type="submit" id="publish"><img src="/images/send_mail.png" alt="send mail icon" class="nav-icon">Send Email + Calendar Invite</button>
+                </form>
 
-                
-                <input type="radio" name="wellcat" id="social" value="social">
-                <label for="social">Social</label>
-                
-            <p>
-                <label for="description">Description</label> 
-                <br>
-                <textarea name="description" id="description" cols="30" rows="3" required></textarea>
-            </p>
-            
-            <button type="submit">Publish Event</button>
+                </div> <!-- Closes Card 2 safely -->
 
-            </form>
-        </div>
+                <!-- THIRD CARD: QR code generation i guess? -->
+                <div class="container awareness-box">
+                    <h2>QR Code</h2>
+                    <p class="minidescription">QR code to be shared for day of event check-in</p>
+                    <div class="mini_container">
+                        <div class="dynamic-scroll-wrapper">
+                            
+                        <!-- QR code will be dynamically generated and displayed here -->
+                        </div>
+                    </div>
 
-        <div>
-        <h5> Send Awareness Communication </h5>
-        Email + Google Calendar invite to all ~1,700 staff. to be changed
+                    <button type="submit" id="publish">Download</button>
 
-        <hr>
+                </div> <!-- Closes Card 3 safely -->
 
-        <h3>Upcoming Events</h3>
+                <!-- OPTIONAL CARD:  -->
+                <div class="container awareness-box">
+                    <h2>Upcoming Events</h2>
+                    
+                        <!-- The Event Tracker List -->
+                    <div class="events-list">
+                        
+                        <!-- Every single event box uses the exact same class structure now! -->
+                        <div class="event-item-row">
+                            <div class="event-details">
+                                <span class="event-title">Staff Hike — Karura Forest</span>
+                                <span class="event-meta">Sat, 19 Jul 2025</span>
+                            </div>
+                        </div>
 
-        put some from db
-        </div>
+                        <div class="event-item-row">
+                            <div class="event-details">
+                                <span class="event-title">Mindfulness & Stress Management Workshop</span>
+                                <span class="event-meta">Wed, 23 Jul 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="event-item-row">
+                            <div class="event-details">
+                                <span class="event-title">Financial Wellness Forum: Budgeting Basics</span>
+                                <span class="event-meta">Fri, 25 Jul 2025</span>
+                            </div>
+                        </div>
+                        
+                        <div class="event-item-row">
+                            <div class="event-details">
+                                <span class="event-title">New Future Event - Automatically Styled</span>
+                                <span class="event-meta">Mon, 28 Jul 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="event-item-row">
+                            <div class="event-details">
+                                <span class="event-title">New Future Event - Automatically Styled</span>
+                                <span class="event-meta">Mon, 28 Jul 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="event-item-row">
+                            <div class="event-details">
+                                <span class="event-title">New Future Event - Automatically Styled</span>
+                                <span class="event-meta">Mon, 28 Jul 2025</span>
+                            </div>
+                        </div>
+
+                        <div class="event-item-row">
+                            <div class="event-details">
+                                <span class="event-title">New Future Event - Automatically Styled</span>
+                                <span class="event-meta">Mon, 28 Jul 2025</span>
+                            </div>
+                        </div>
+
+                        
+                    </div>
+
+                </div> <!-- Closes Card 4 safely -->
+
+            </div> <!-- This closes dashboard-row -->
+</main>
+
     </body>
 </html>

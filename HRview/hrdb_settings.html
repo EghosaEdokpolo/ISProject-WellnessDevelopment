@@ -63,57 +63,86 @@
 
         <!--Title-->
         <h1>Settings</h1>
+        <main>
+                <!--page details-->
+                <div class="dashboard-row">
+                        
+                <div class="container reset_control">
+                
+                        <h2 class="mini-h2">Points Reset Control</h2>
+                        <span class="mini-description">Points reset annually. This action is irreversible; all staff balances will be zeroed.</span>
 
-        <!--page details-->
-        <div>
-            <h3>Points reset control</h3>
-            <p>Points reset annually. This action is irreversible; all staff balances will be zeroed.</p>
+                        <div class="mini_container2">
+                            <p id="mc2_name">Current cycle: <span> current year</span></p>
+                            <p id="mc2_name">Next Reset: <span> curent year plus 1</span></p>
+                            
+                        </div>
 
-            <p>reset button here</p>
-        </div>
+                        <button type="submit" id="reset">Reset All Staff Points</button>
+                </div>
 
-        <div>
-            <h3>Data Protection Details</h3>
+                <div class="container dataProtection">
+                    <h2 class="mini-h2">Data Protection Details</h2>
 
-            <div class="data-table">
-            <!-- Row 1 -->
-                <div class="data-row">
-                <div class="data-label">Data Controller</div>
-                <div class="data-value">Strathmore University, Madaraka Estate, Nairobi</div>
+                    <table class="data-protection-table">
+                        <tbody>
+                        <!--row 1-->
+                            <tr>
+                                <td class="tdlabel">
+                                    Data Controller
+                                </td>
+                                <td>
+                                    Strathmore University, Madaraka Estate, Nairobi
+                                </td>
+                            </tr>
+
+                        <!-- Row 2 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    Applicable Law
+                                </td>
+                                <td>
+                                    Kenya Data Protection Act, 2019
+                                </td>
+                            </tr>
+
+                        <!-- row 3 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    Retention Period
+                                </td>
+                                <td>
+                                    1 academic year from event date
+                                </td>
+                            </tr>
+
+                        <!-- row 4 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    Contact
+                                </td>
+                                <td>
+                                    dataprotection@strathmore.edu
+                                </td>
+                            </tr>
+
+                        <!-- row 5 -->
+                            <tr>
+                                <td class="tdlabel">
+                                    DPIA Status
+                                </td>
+                                <td>
+                                    Initial DPIA completed - xxxx
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
             </div>
 
-            <!-- Row 2 -->
-            <div class="data-row">
-                <div class="data-label">Applicable Law</div>
-                <div class="data-value">Kenya Data Protection Act, 2019</div>
-            </div>
+            <button type="submit" id="logout">Logout</button>
 
-            <!-- Row 3 -->
-            <div class="data-row">
-                <div class="data-label">Retention Period</div>
-                <div class="data-value">1 academic year from event date</div>
-            </div>
-
-            <!-- Row 4 -->
-            <div class="data-row">
-                <div class="data-label">Contact</div>
-                <div class="data-value">dataprotection@strathmore.edu</div>
-            </div>
-
-            <!-- Row 5 -->
-            <div class="data-row">
-                <div class="data-label">DPIA Status</div>
-                <div class="data-value">Initial DPIA completed - xxxx</div>
-            </div>
-        </div>
-    </div>
-
-
-        <div>
-            <br>
-            Accesibility Settings
-            idk to be further discussed
-        </div>
-        
+        </main>
     </body>
 </html>

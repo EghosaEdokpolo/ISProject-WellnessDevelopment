@@ -70,12 +70,12 @@ body{
     }
 
     .loginbutton{
-        width: 20%;
+        width: 100%;
         margin: auto;
         padding: 12px;
-        font-size: larger;
+        font-size: large;
         background-color: rgb(204, 156, 74);     /* Strathmore Blue */
-        color: white;
+        color: White;
         font-weight: bold;
         border: none;
         border-radius: 7px;

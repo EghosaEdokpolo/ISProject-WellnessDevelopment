@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <!--meta data about the page that isnt seen-->
+        <meta charset="UTF-8">
+        <meta name="author" content="group 1">
+        <meta name="description" content="This is the plain base page for IS project.">
+
+        <title>First webpage screen</title>
+        <link rel="icon" href="../assets/Strathmore_uni_logo-notext.png" type="image/x-icon">
+        <link rel="stylesheet" href="../css/hr_view_style.css">
+    </head>
+
+    <body>
+        <!--data about the page that is seen-->
+            <div class="header-title">
+                <img src="../assets/Strathmore_uni_logo-notext.png" alt="Strathmore University Logo">
+                Strathmore University - Wellness Programme Management & Impact System (WPMIS)
+            </div>
+
+        <header class="nav-head">
+            <!--first category at the top of the page-->
+            <!--navigation links-->
+            <nav class="nav-menu">
+                <div class="pillgroup1">
+                    <span class="category-label">Dashboards</span> 
+
+                    <a href="hrdb_overview.html" class="nav-link"> 
+                        <img src="/images/analytics-icon.png" alt="analytics icon" class="nav-icon"> Overview
+                    </a> 
+
+                    <a href="hrdb_impact.html" class="nav-link active">
+                        <img src="/images/Impact-icon.png" alt="impact icon" class="nav-icon" id="impact-icon">Impact
+                    </a> 
+
+                    <a href="hrdb_retention.html" class="nav-link">
+                       <img src="/images/retention-icon1.png" alt="retention icon" class="nav-icon" id="retention-icon"> Retention
+                    </a>
+
+                    <a href="hrdb_departmental.html" class="nav-link">
+                        <img src="/images/department-icon.png" alt="department icon" class="nav-icon">Departmental
+                    </a>
+                </div>
+                
+                <!--second category at the top of the page-->
+                <a href="hrdb_attendeetable.html" class="nav-link">
+                    <img src="/images/attendance-icon.png" alt="attendees icon" class="nav-icon">Attendees
+                </a> 
+
+                <a href="hrdb_eventsmanagement.html" class="nav-link">
+                    <img src="/images/events-icon.png" alt="events icon" class="nav-icon"> Events
+                </a> 
+
+                <a href="hrdb_settings.html" class="nav-link">
+                    <img src="/images/settings-icon.png" alt="settings icon" class="nav-icon">Settings
+                </a>
+            </nav>
+        </header>
+
+        <!--Title-->
+        <h1>Wellness Impact Score</h1>
+
+        <!--page details-->
+        <p> Based on the"WHO-5 Well-Being Index". Score below 13 indicates poor wellbeing for Pre vs post comparison per event.</p>
+
+        <!--in page links for different wellness categories-->
+        <a>All</a> 
+        <a>Physical</a> 
+        <a>Mental</a>
+        <a>Financial</a>
+        <a>social</a>
+
+        <p><strong>NOTE </strong>more to be added under the categories i.e. single webpage developemtnt techniques</p>
+
+
+
+            TABLE at the bottom of the page
+            <br>
+            <table>
+                <!--row 1-->
+                <thead>
+                    <tr>
+                        <!--subject to heavy changes cause what is the table name even-->
+                        <th scope="col">Event</th>
+                        <th scope="col">Pre Assesment</th>
+                        <th scope="col">Post Assesment</th>
+                        <th scope="col">Lift</th>
+                        <th scope="col">Follow-up</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                <!--row 2-->
+                <tr>
+                    <td>
+                        Yoga & Mindfulness
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Mental Health Talk
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+    </body>
+</html>

@@ -1,0 +1,589 @@
+/* main page attribute for all linked pages */
+body{
+    font-family: Arial, Helvetica, sans-serif; 
+    background-color: #f5f4f0;  
+    margin: 0;
+    padding: 0;
+    width: 100%;
+
+    overflow-x: hidden;
+}
+
+/* !!!!headers styling accross pages!!!! */
+
+.header-title{
+    
+    /* colouring and position*/
+    background-color: rgb(2, 51, 141);
+    padding: 10px;
+    color: rgb(255, 255, 255);
+    padding-left: 5%;
+    font-size: larger;
+    align-items: center;
+    display: flex;
+
+}
+
+.header-title img{
+    height: 50px;
+    width: auto;
+    margin-right: 10px;
+    margin-bottom: auto;
+}
+
+.category-label{
+    color: #6a7e9a; /* Default text color for category labels */
+}
+
+.nav-head {
+    position: sticky;
+    top: 0;
+    z-index: 1000; 
+}   
+
+ .nav-head nav{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: medium;
+    background-color: white;
+    box-shadow: 0px 1px 5px black;
+    width: 100%;
+
+    /* include an element's padding and border within its total specified width and
+    height making the content inside smaller rather than expand the page */
+    box-sizing: border-box;
+    
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+.nav-menu{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    
+    /* allows layout to drop items down if it runs out of width space */
+    flex-wrap: wrap;
+
+}
+
+.pillgroup1 {
+    background-color: #f5f4f0; 
+    padding: 7px 18px;
+    border-radius: 26px;       
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+} 
+
+.nav-link{
+    /* makes children inline(side by side) while still
+     being affected by other elements */
+    display: inline-flex;
+
+    align-items: center;
+    gap: 8px;                  
+    text-decoration: none;
+    color: #000000;            
+    font-weight: 500;
+    font-size: 14px;
+    padding: 7px 16px;
+    border-radius: 20px;   
+
+    /* smooth transition in and out     */
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    color: rgb(7, 59, 156);
+    background-color: rgba(245, 185, 81, 0.3);
+}
+
+.nav-link.active {
+    background-color: rgb(204, 156, 74); /* Solid primary blue block background */
+    color: white;              /* White text string */
+}
+
+.nav-icon{
+    width: 20px;
+    height: 20px;
+
+    /* ensures the icon maintains its aspect ratio */
+    object-fit: contain;
+
+    /* smooth animation changes */
+    transition: filter 0.2s;
+}
+
+/* handles the active icon */
+.nav-link.active .nav-icon {
+    filter: brightness(0) invert(1); 
+}
+
+#retention-icon {
+    scale: 160%;
+}
+
+#impact-icon {
+    scale: 130%;
+}
+
+
+
+/* !!!!main page general styling!!!! */
+
+/* head 1 styling */
+h1{
+    margin-left: 100px;
+    margin-top: 50px;
+}
+
+/* head 2 styling */
+.mini-h2{
+    display: flex;
+    align-items: center;
+    font-size: medium;
+    font-family:'Trebuchet MS', 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif;
+}
+
+
+
+ /* EVENTS PAGE STYLING START */
+
+/* general container styling */
+.container {
+    box-shadow: 0px 0px 4px #737070;
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 25px;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    /* Ensures that cards sitting side-by-side match each other's height */
+    flex: 1 1 330px;
+    
+}
+
+/* handles row layout and wrapping */
+.dashboard-row {
+    display: flex;
+    flex-wrap: wrap;          /* Enables containers to wrap cleanly onto row two */
+    justify-content: center;  /* Centers your containers in the middle of the screen space */
+    gap: 30px;                /* Clear padding space separating your container blocks */
+    padding: 4%; 
+    padding-top: 2%;             /* Smooth margin breathing room relative to screen size */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dashboard-row .container {
+    flex: 1 1 450px;          /* tells browsers how to shrink and grow content */
+    max-width: 750px;         /* Prevents containers from stretching awkwardly or too much on big screens */
+}
+
+/* modify the label styling */
+.form_labels {
+    font-weight:lighter;
+    font-size:16px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+   
+}
+
+
+ /* Make inputs look modern and fit the card well */
+    .dashboard-row .container input[type="text"],
+    .dashboard-row .container textarea,
+    .dashboard-row .container input[type="date"] {
+        margin: auto;
+        margin-top: 10px;
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    /* Changes border color on active state */
+    /* focus is a pseudo-class element for when an input is interacted with */
+    input:focus,
+    textarea:focus {
+        outline: 4px solid rgba(84, 213, 238, 0.2);;
+    }
+
+/* hide the regular radio button input */
+.candpevents input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+}
+
+
+.candpevents form {
+    display: flex;
+    flex-direction: column;
+    
+    /* Tells a flex item to grow and take up extra free space inside a container. */
+    flex-grow: 1; 
+}
+/* style for radio buttons */
+/* this goes into the form and finds the first div containing the radio buttons */
+.candpevents form > div {
+    display: flex;
+    flex-wrap: wrap;          
+    gap: 8px;                  
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    width: 100%;
+    box-sizing: border-box;
+
+}
+
+/* Style the labels to look like clean button capsules */
+.candpevents input[type="radio"] + label {
+    display: inline-flex;
+    justify-content: center;
+    
+     
+    border: 3px solid #d1d5db;   
+    color: #4b5563;              
+    padding: 8px 18px;
+    border-radius: 15px;        
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.candpevents input[type="radio"]:checked + label {
+background-color: rgb(226, 66, 55);   /* Solid vibrant primary blue color block */
+    border-color: rgb(226, 66, 55);       /* Cleans up grey border outlines */
+    color: #ffffff;              /* Flips layout font color to pure white */
+    font-weight: 600;
+    box-shadow: 0px 4px 10px rgba(215, 85, 76, 0.592); /* Soft ambient glowing backdrop drop shadow */
+}
+
+.mini_container {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    background-color: rgba(197, 197, 197, 0.403);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    max-height: 300px;
+    min-height: 300px;
+    box-sizing: border-box;
+}
+
+/* dynamic scroll wrapper for mini containers */
+.dynamic-scroll-wrapper {
+    max-height: 280px;         /* Caps how tall this single dynamic field block can expand */
+    overflow-y: auto;          /* Turns on vertical scrolling ONLY if data spills over */
+    padding-right: 10px;        /* Safety cushion space separating scrollbars from text content strings */
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* button */
+#publish{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: auto;
+    padding: 12px;
+    font-size: large;
+    background-color: rgb(204, 156, 74);     
+    color: black;
+    font-weight: bold;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-top: 10px;
+    
+}
+
+#publish:active {
+    background-color: rgb(139, 105, 47);
+}
+
+#publish img{
+  /* Adds some space between the icon and the button text */
+    margin-right: 8px;
+}
+
+/* upcoming events styling */
+.events-list {
+    display: flex;
+    flex-direction: column;       
+    gap: 12px;  
+    
+    /* scroll if the list gets too long */
+    
+    /* Caps the height of the card */
+    max-height: 380px; 
+    padding-right: 10px;
+    /* Adds a vertical scrollbar if items overflow the max-height */
+    overflow-y: auto;             
+}
+
+.event-item-row {
+    border-radius: 12px;          
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;          
+    box-sizing: border-box;
+    transition: transform 0.2s;
+}
+
+.event-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.event-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.event-meta {
+    font-size: 12px;
+    color: #4b5563;
+}
+
+/*THE AUTOMATED 3-COLOR SYSTEM LOOP (NTH-CHILD ) */
+/* 1st, 4th, 7th, 10th elements... (Alpha Soft Red) */
+.events-list .event-item-row:nth-child(3n+1) {
+    background-color: rgba(239, 68, 68, 0.08); /* 8% opacity red tint */
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+/* 2nd, 5th, 8th, 11th elements... (Alpha Soft Blue) */
+.events-list .event-item-row:nth-child(3n+2) {
+    background-color: rgba(59, 130, 246, 0.08); /* 8% opacity blue tint */
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* 3rd, 6th, 9th, 12th elements... (Alpha Orange-Brown-Yellow) */
+.events-list .event-item-row:nth-child(3n+3) {
+    background-color: rgba(217, 119, 6, 0.08); /* 8% opacity gold/amber tint */
+    border: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+/* EVENTS PAGE STYLING END */
+
+
+/* SETTINGS PAGE STYLING START */
+
+/* point reset styling */
+.reset_control {
+    flex: 1 1 450px;          /* tells browsers how to shrink and grow content */
+    min-width: 500px;         /* Prevents containers from stretching awkwardly or too much on big screens */
+    margin-bottom: 0%;
+}
+
+.mini-description{
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: rgb(116, 116, 116);
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+.mini_container2 {
+    padding: 10px;
+    border-radius: 6px;
+    background-color:#f5f4f0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#mc2_name{
+    margin: 3px;
+    font-size: small;
+    font-weight: bold;
+    color: rgb(101, 101, 101);
+}
+
+#mc2_name span{
+    font-weight: 100;
+}
+
+/* reset points button */
+#reset{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 12px;
+    font-size: large;
+    background-color: rgba(253, 215, 215, 0.5);     
+    color: red;
+    font-family: 'Gill Sans MT', Calibri, 'Gill Sans', 'Trebuchet MS', sans-serif;
+    border: 2px solid red;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: auto;
+}
+
+#reset:active{
+    background-color: rgba(203, 164, 164, 0.7);
+}
+
+/* data protection styling */
+table.data-protection-table{
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    border-collapse: collapse;
+}
+table.data-protection-table td{
+    padding: 5px;
+    padding-right: 15px;
+    font-weight: lighter;
+}
+
+table.data-protection-table td.tdlabel{
+    color: rgb(101, 101, 101);
+    margin-right: 15px;
+}
+
+#logout{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20%;
+    padding: 12px;
+    font-size: large;
+    background-color: rgba(253, 215, 215, 0.5);     
+    color: white;
+    font-weight: bold;
+    border: 2px solid rgb(255, 102, 102);
+    background-color: rgb(249, 28, 28);
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: 50px;
+}
+
+#logout:active{
+    background-color: rgb(162, 18, 18);
+}
+
+/* SETTINGS PAGE STYLING END */
+
+
+
+/* ATTENDEE PAGE STYLING START */
+.caption {
+     margin: 0;          /* clear conflicting margins with h1 */
+    padding-left: 100px;  
+    margin-bottom: 20px;
+    font-size: 15px;
+    color: #6b7280;
+
+}
+
+.table-container {
+    border-radius: 16px;        /* Sets how round your table corners will be */
+    overflow: hidden;           /* trims off the sharp corners of the cells inside */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5); /* Optional: Adds a premium drop shadow frame */
+    width: 100%;
+    overflow-x: auto; 
+    box-sizing: border-box;
+    
+}
+
+/* table modifications */
+table{
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center; /* Centers the content horizontally */
+    font-size: small;
+    font-family:'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', 'Lucida Sans Regular', Geneva, Verdana, sans-serif;
+
+}
+
+
+th{
+    padding: 14px 18px;
+    max-width: 100px; /* Sets a maximum width for the table header cells */
+    background-color: #536be2;
+    white-space: wrap; 
+    color: white;
+}
+td{
+    justify-content: center; /* Centers the content horizontally */
+    padding: 14px 18px;
+    white-space: nowrap; 
+}
+
+tr:nth-child(odd){
+    background-color: #e9e9e9;
+}
+
+/* icon properties */
+.iconcolumn{
+    text-align: center; /* Centers the content horizontally */
+}
+
+.iconcolumn img{
+    width: 30px;
+    height: 30px; 
+}
+
+/* styling table details/data */
+.name-column{
+    font-weight: 600;
+}
+
+.department-column{
+    font-weight: lighter;
+    color: grey;
+}
+
+.column-text{
+    font-weight: bolder;
+    color: rgb(155, 129, 233);
+}
+
+.column-status1 .col-pill{
+    border-radius: 30px;
+    background-color: rgba(175, 255, 175, 0.5);
+    border: 2px solid lime;
+    padding: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-weight: bolder;
+    color: green;
+}
+
+.column-status2 .col-pill{
+    border-radius: 30px;
+    background-color: rgba(255, 244, 159, 0.5);
+    border: 2px solid orange;
+    padding: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-weight: bolder;
+    color: orange;
+}
+
+.column-status3 .col-pill{
+    border-radius: 30px;
+    background-color: rgba(163, 195, 255, 0.5);
+    border: 2px solid rgb(88, 88, 255);
+    padding: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-weight: bolder;
+    color: blue;
+}

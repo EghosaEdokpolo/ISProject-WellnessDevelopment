@@ -1,0 +1,120 @@
+body{
+    /* main page attribute for all linked pages */
+    
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    
+    display: flex;
+    flex-direction: column; 
+    /* Forces the page to be exactly full screen height 
+    depending on the dimension of the screen they are on*/  
+    min-height: 100vh; 
+    overflow-x: hidden;       
+}
+    
+    /* custom styling for things with id's */
+    #loginstrathlogo{
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    /* targeting the actual image */
+    #loginstrathlogo img{
+        margin: 15px;
+        width: 130px;
+        height: 170px;
+    }
+
+    h1{
+        margin: 10px ;
+        font-size:0.5in;
+  }
+  
+    h2{
+        font-weight: lighter;
+        text-align: center;
+  }
+
+    #loginform{
+        /* colour things */
+        background-color: rgb(2, 51, 141); 
+        padding: 30px;
+        border-radius: 12px;
+        color: white;
+        /* shadow */
+        box-shadow: 0px 0px 10px black;
+        box-sizing: border-box;
+
+        /* position placements */
+        width: 90%;
+        max-width: 700px;
+        margin: auto auto 20px auto;
+  }
+
+    #loginform form{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+  }
+
+  /* Make inputs look modern and fit the card well */
+    #loginform input[type="text"],
+    #loginform input[type="password"] {
+        margin: auto;
+        width: 80%;
+        padding: 12px;
+        border: 2px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+
+    .loginbutton{
+        width: 100%;
+        margin: auto;
+        padding: 12px;
+        font-size: large;
+        background-color: rgb(204, 156, 74);     /* Strathmore Blue */
+        color: White;
+        font-weight: bold;
+        border: none;
+        border-radius: 7px;
+        cursor: pointer;
+    }
+    
+    .loginbutton:active{
+        background-color: rgb(139, 105, 47);
+    }
+
+    /* styling the link */
+    #loginform a {
+        text-decoration: none;    
+        color: white;           
+        font-size: 20px;         
+        font-weight: 500;        
+        transition: color 0.2s;  
+    }
+
+    
+    #loginform a:hover {
+        color: #e67e22;           
+        text-decoration: underline; 
+    }
+
+    
+    #loginform a:active {
+        color: #111111;          
+    }
+
+    .footer{
+        width: 100%;
+        background-color: rgb(2, 51, 141);
+        text-align: center;
+        font-weight: 600;
+        font-size: medium;
+        color: white;
+
+        
+        /* This forces the footer to strictly sit at the baseline */
+        margin-top: auto;
+    }

@@ -12,7 +12,8 @@
         <!--favicon-->
         <link rel="icon" href="../assets/Strathmore_uni_logo-notext.png" type="image/x-icon">
         
-        <link rel="stylesheet" href="../css/hr_view_style.css">
+         <!-- Laravel Vite directive to load compiled application bundles if needed -->
+        @vite(['resources/css/hr_view_style.css', 'resources/js/app.js'])
     </head>
 
     <body>
@@ -29,33 +30,33 @@
                 <div class="pillgroup1">
                     <span class="category-label">Dashboards</span> 
 
-                    <a href="hrdb_overview.html" class="nav-link"> 
+                    <a href="{{ route('dashboard.hr') }}" class="nav-link"> 
                         <img src="/images/analytics-icon.png" alt="analytics icon" class="nav-icon"> Overview
                     </a> 
 
-                    <a href="hrdb_impact.html" class="nav-link">
+                    <a href="{{ route('impact.analytics') }}" class="nav-link">
                         <img src="/images/Impact-icon.png" alt="impact icon" class="nav-icon" id="impact-icon">Impact
                     </a> 
 
-                    <a href="hrdb_retention.html" class="nav-link">
+                    <a href="#" class="nav-link">
                        <img src="/images/retention-icon1.png" alt="retention icon" class="nav-icon" id="retention-icon"> Retention
                     </a>
 
-                    <a href="hrdb_departmental.html" class="nav-link">
+                    <a href="#" class="nav-link">
                         <img src="/images/department-icon.png" alt="department icon" class="nav-icon">Departmental
                     </a>
                 </div>
                 
                 <!--second category at the top of the page-->
-                <a href="hrdb_attendeetable.html" class="nav-link">
+                <a href="{{ route('attendees.index') }}" class="nav-link">
                     <img src="/images/attendance-icon.png" alt="attendees icon" class="nav-icon">Attendees
                 </a> 
 
-                <a href="hrdb_eventsmanagement.html" class="nav-link">
+                <a href="{{ route('events.management') }}" class="nav-link">
                     <img src="/images/events-icon.png" alt="events icon" class="nav-icon"> Events
                 </a> 
 
-                <a href="hrdb_settings.html" class="nav-link active">
+                <a href="{{ route('settings.edit') }}" class="nav-link active">
                     <img src="/images/settings-icon.png" alt="settings icon" class="nav-icon">Settings
                 </a>
             </nav>

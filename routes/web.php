@@ -53,12 +53,27 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/rewards', [DashboardController::class, 'rewards'])->name('rewards.index');
 
+
     // --- HR Coordinator-only routes ---
     Route::middleware('hr')->group(function () {
-        Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
-        Route::post('/events', [EventController::class, 'store'])->name('events.store');
-        Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-        Route::get('/dashboard/overview', [DashboardController::class, 'hrOverview'])->name('dashboard.hr');
+        Route::get('/events-management', [DashboardController::class, 'eventmanagement'])->name('events.management');
+
+        Route::get('/impact-analytics', [DashboardController::class, 'impactAnalytics'])->name('impact.analytics');
+
+        Route::get('/department-analysis', [DashboardController::class, 'departmentanalysis'])->name('department.analysis');
+
+        Route::get('/retention-metrics', [DashboardController::class, 'retentionmetrics'])->name('retention.metrics');
+
+        Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.edit');
+        Route::post('/settings', [DashboardController::class, 'updateSettings'])->name('settings.update');
+
+        Route::get('/hr/overview', [DashboardController::class, 'hrOverview'])->name('dashboard.hr');
         Route::get('/attendees', [DashboardController::class, 'attendees'])->name('attendees.index');
-    });
+
+        
+        Route::get('/events/create', [EventController::class, 'create'])->name('events.create');    
+        // Route::post('/events', [EventController::class, 'store'])->name('events.store');
+        // Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+
+        });
 });require __DIR__.'/auth.php';

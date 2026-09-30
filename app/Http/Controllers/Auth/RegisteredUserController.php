@@ -30,22 +30,30 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // 1. Validate the incoming form inputs
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            // CHANGED: Swapped email validation for a required, numeric, unique staff_id validation
+            'staff_id' => ['required', 'string', 'max:50', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // 2. Safely write the user account row into your MySQL table container
         $user = User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            // CHANGED: Map the form field 'staff_id' directly to your user model database column
+            'staff_id' => $request->staff_id,
+            // Bcrypt hashing driver automatically fires here to securely salt the string
             'password' => Hash::make($request->password),
         ]);
 
+        // 3. Dispatch global system account creation event metrics
         event(new Registered($user));
 
+        // 4. Authenticate the newly generated user session record
         Auth::login($user);
 
+        // 5. Securely route them directly through the dashboard middleware gate
         return redirect(route('dashboard', absolute: false));
     }
 }

@@ -2,119 +2,149 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Ensures proper scaling and responsive rendering on mobile viewports -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WellLoop — WPMIS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: { colors: {
-                'wl-navy':'#161a33','wl-indigo':'#5b5fc7','wl-gold':'#c99a2e',
-                'wl-cream':'#f6f4ee','wl-lavender':'#e4e2fb','wl-mint':'#dcf3e4','wl-lilac':'#f1e4fa'
-            }}}
-        }
-    </script>
+    <!-- Laravel Vite directive to load compiled application CSS and JS bundles -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-wl-cream min-h-screen">
+<body class="bg-wl-cream min-h-screen font-sans antialiased selection:bg-wl-indigo selection:text-white">
 
-    <div class="bg-wl-navy text-wl-gold text-xs tracking-wide font-semibold px-6 py-2">
+    <!-- 
+      TOP ANNOUNCEMENT BAR
+      Displays global system branding. Swaps between center alignment 
+      on mobile devices and left alignment on small tablets or screens.
+    -->
+    <div class="bg-wl-navy text-wl-gold text-xs tracking-wide font-semibold px-6 py-2 text-center sm:text-left">
         WPMIS — WELLNESS PROGRAMME MANAGEMENT &amp; IMPACT SYSTEM
     </div>
 
-    <nav class="bg-white shadow-sm px-6 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <div class="w-9 h-9 bg-wl-indigo rounded-lg flex items-center justify-center text-white font-bold">S</div>
+    
+    <nav class="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+        
+        <div class="flex items-center gap-3">
+            <!-- Stylized Initial Box acting as a placeholder logo brand -->
+            <div class="w-10 h-10 bg-wl-indigo rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-inner">
+                S
+            </div>
+            <!-- Subsystem Title Blocks -->
             <div>
-                <div class="font-bold text-wl-indigo leading-tight">Strathmore University</div>
-                <div class="text-xs text-gray-500 leading-tight">WellLoop · Powered by People &amp; Culture</div>
+                <div class="font-bold text-wl-indigo text-base leading-tight">Strathmore University</div>
+                <div class="text-xs text-gray-500 font-medium leading-tight">WellLoop · Powered by People &amp; Culture</div>
             </div>
         </div>
-        <div class="flex gap-4 text-sm font-medium">
-            <a href="{{ route('login') }}" class="text-gray-600 hover:text-wl-indigo px-3 py-2">Log in</a>
-            <a href="{{ route('register') }}" class="bg-wl-gold text-wl-navy px-4 py-2 rounded-lg font-semibold">Get started</a>
+
+        <!-- Navigation Actions (Only Login is retained as Registration routes are disabled) -->
+        <div>
+            <a href="{{ route('login') }}" class="bg-wl-gold text-wl-navy px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 hover:brightness-105 active:scale-95 shadow-sm">
+                Log in
+            </a>
         </div>
     </nav>
 
-    {{-- Hero --}}
-    <section class="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
-        <h1 class="text-4xl font-bold text-gray-900 leading-tight">
+    <!-- 
+      HERO MARKETING SECTION 
+      Main textual pitch designed to catch user attention and drive them to the login terminal.
+    -->
+    <section class="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
             Staff wellness, <span class="text-wl-indigo">measured and managed</span> in one place
         </h1>
-        <p class="text-gray-500 mt-4 max-w-2xl mx-auto">
+        <p class="text-gray-600 mt-6 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
             Register for events, check in with a QR code, track your wellbeing with the
             WHO-5 index, and earn points — all in one system built for Strathmore staff.
         </p>
-        <div class="flex justify-center gap-4 mt-8">
-            <a href="{{ route('login') }}" class="bg-wl-indigo text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90">
-                Log in
-            </a>
-            <a href="{{ route('register') }}" class="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:border-wl-indigo">
-                Create an account
+        <!-- Primary Call to Action Button -->
+        <div class="mt-10">
+            <a href="{{ route('login') }}" class="inline-block bg-wl-indigo text-white px-8 py-3.5 rounded-xl font-bold tracking-wide transition-all duration-200 hover:opacity-95 active:scale-95 shadow-md shadow-wl-indigo/10">
+                Log in to WellLoop
             </a>
         </div>
     </section>
 
-    {{-- Wellness dimension cards — each links straight into the filtered
-         Events list. A logged-out visitor gets sent to login first (the
-         'auth' middleware on /events catches them, then Laravel's Breeze
-         redirects back to the originally-requested URL after they sign in —
-         so they land exactly on the filtered category they clicked, not a
-         generic events page). --}}
-    <section class="max-w-5xl mx-auto px-6 pb-16 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a href="{{ route('events.index', ['category' => 'physical']) }}"
-           class="bg-wl-lavender rounded-xl p-5 text-center hover:ring-2 hover:ring-wl-indigo transition">
-            <p class="text-2xl mb-1">🏃</p>
-            <p class="font-semibold text-wl-indigo text-sm">Physical</p>
-            <p class="text-xs text-gray-500 mt-1">Hikes, gym orientation, active challenges</p>
-        </a>
-        <a href="{{ route('events.index', ['category' => 'mental']) }}"
-           class="bg-wl-mint rounded-xl p-5 text-center hover:ring-2 hover:ring-emerald-500 transition">
-            <p class="text-2xl mb-1">🧠</p>
-            <p class="font-semibold text-emerald-700 text-sm">Mental</p>
-            <p class="text-xs text-gray-500 mt-1">Mindfulness, stress management workshops</p>
-        </a>
-        <a href="{{ route('events.index', ['category' => 'financial']) }}"
-           class="bg-wl-cream border border-amber-100 rounded-xl p-5 text-center hover:ring-2 hover:ring-amber-500 transition">
-            <p class="text-2xl mb-1">💰</p>
-            <p class="font-semibold text-amber-700 text-sm">Financial</p>
-            <p class="text-xs text-gray-500 mt-1">Budgeting forums, financial wellbeing basics</p>
-        </a>
-        <a href="{{ route('events.index', ['category' => 'social']) }}"
-           class="bg-wl-lilac rounded-xl p-5 text-center hover:ring-2 hover:ring-purple-500 transition">
-            <p class="text-2xl mb-1">🤝</p>
-            <p class="font-semibold text-purple-700 text-sm">Social</p>
-            <p class="text-xs text-gray-500 mt-1">Cross-department mixers &amp; peer support</p>
-        </a>
+    <!-- 
+      WELLNESS DIMENSIONS SHOWCASE
+      Converted from actionable anchor button wrappers into structural 'div' display cards.
+      These elements present system focuses statically and no longer route users to individual event channels.
+    -->
+    <section class="max-w-5xl mx-auto px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        
+        <!-- Physical Wellness Segment -->
+        <div class="bg-wl-lavender rounded-2xl p-6 text-center shadow-sm border border-indigo-100/40">
+            <span class="text-3xl inline-block mb-2 select-none" role="img" aria-label="Physical Dimension">🏃</span>
+            <h3 class="font-bold text-wl-indigo text-base tracking-wide">Physical</h3>
+            <p class="text-xs text-gray-600 mt-2 leading-relaxed">Hikes, gym orientation, active challenges</p>
+        </div>
+
+        <!-- Mental Wellness Segment -->
+        <div class="bg-wl-mint rounded-2xl p-6 text-center shadow-sm border border-emerald-100/40">
+            <span class="text-3xl inline-block mb-2 select-none" role="img" aria-label="Mental Dimension">🧠</span>
+            <h3 class="font-bold text-emerald-800 text-base tracking-wide">Mental</h3>
+            <p class="text-xs text-gray-600 mt-2 leading-relaxed">Mindfulness, stress management workshops</p>
+        </div>
+
+        <!-- Financial Wellness Segment -->
+        <div class="bg-white border border-amber-100 rounded-2xl p-6 text-center shadow-sm">
+            <span class="text-3xl inline-block mb-2 select-none" role="img" aria-label="Financial Dimension">💰</span>
+            <h3 class="font-bold text-amber-800 text-base tracking-wide">Financial</h3>
+            <p class="text-xs text-gray-600 mt-2 leading-relaxed">Budgeting forums, financial wellbeing basics</p>
+        </div>
+
+        <!-- Social Wellness Segment -->
+        <div class="bg-wl-lilac rounded-2xl p-6 text-center shadow-sm border border-purple-100/40">
+            <span class="text-3xl inline-block mb-2 select-none" role="img" aria-label="Social Dimension">🤝</span>
+            <h3 class="font-bold text-purple-800 text-base tracking-wide">Social</h3>
+            <p class="text-xs text-gray-600 mt-2 leading-relaxed">Cross-department mixers &amp; peer support</p>
+        </div>
+
     </section>
 
-    {{-- How it works --}}
-    <section class="bg-white py-14">
+    <!-- 
+      PROCESS WORKFLOW / PIPELINE SECTION
+      Breakdown steps demonstrating program rules and participant milestones.
+    -->
+    <section class="bg-white py-16 border-t border-gray-100">
         <div class="max-w-5xl mx-auto px-6">
-            <h2 class="text-xl font-bold text-gray-900 text-center mb-10">How it works</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-                <div>
-                    <div class="w-10 h-10 bg-wl-indigo text-white rounded-full flex items-center justify-center mx-auto font-bold mb-3">1</div>
-                    <p class="text-sm font-semibold text-gray-800">Register</p>
-                    <p class="text-xs text-gray-500 mt-1">Browse events and sign up in a click</p>
+            <h2 class="text-2xl font-extrabold text-gray-900 text-center mb-12 tracking-tight">How It Works</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <!-- Step 1: Initial Enrollment -->
+                <div class="flex flex-col items-center">
+                    <div class="w-11 h-11 bg-wl-indigo text-white rounded-full flex items-center justify-center font-bold text-base shadow-sm mb-4">1</div>
+                    <h4 class="text-sm font-bold text-gray-800 tracking-wide">Register</h4>
+                    <p class="text-xs text-gray-500 mt-2 max-w-[200px] leading-relaxed">Browse events and sign up in a click</p>
                 </div>
-                <div>
-                    <div class="w-10 h-10 bg-wl-indigo text-white rounded-full flex items-center justify-center mx-auto font-bold mb-3">2</div>
-                    <p class="text-sm font-semibold text-gray-800">Check in</p>
-                    <p class="text-xs text-gray-500 mt-1">Scan your QR code at the event</p>
+
+                <!-- Step 2: Verification Protocol -->
+                <div class="flex flex-col items-center">
+                    <div class="w-11 h-11 bg-wl-indigo text-white rounded-full flex items-center justify-center font-bold text-base shadow-sm mb-4">2</div>
+                    <h4 class="text-sm font-bold text-gray-800 tracking-wide">Check In</h4>
+                    <p class="text-xs text-gray-500 mt-2 max-w-[200px] leading-relaxed">Scan your QR code at the event</p>
                 </div>
-                <div>
-                    <div class="w-10 h-10 bg-wl-indigo text-white rounded-full flex items-center justify-center mx-auto font-bold mb-3">3</div>
-                    <p class="text-sm font-semibold text-gray-800">Reflect</p>
-                    <p class="text-xs text-gray-500 mt-1">Quick WHO-5 wellbeing check afterward</p>
+
+                <!-- Step 3: Analytical Reflection -->
+                <div class="flex flex-col items-center">
+                    <div class="w-11 h-11 bg-wl-indigo text-white rounded-full flex items-center justify-center font-bold text-base shadow-sm mb-4">3</div>
+                    <h4 class="text-sm font-bold text-gray-800 tracking-wide">Reflect</h4>
+                    <p class="text-xs text-gray-500 mt-2 max-w-[200px] leading-relaxed">Quick WHO-5 wellbeing check afterward</p>
                 </div>
-                <div>
-                    <div class="w-10 h-10 bg-wl-gold text-wl-navy rounded-full flex items-center justify-center mx-auto font-bold mb-3">4</div>
-                    <p class="text-sm font-semibold text-gray-800">Earn points</p>
-                    <p class="text-xs text-gray-500 mt-1">Redeem for rewards, climb the leaderboard</p>
+
+                <!-- Step 4: Incentive Accumulation -->
+                <div class="flex flex-col items-center">
+                    <div class="w-11 h-11 bg-wl-gold text-wl-navy rounded-full flex items-center justify-center font-bold text-base shadow-sm mb-4">4</div>
+                    <h4 class="text-sm font-bold text-gray-800 tracking-wide">Earn Points</h4>
+                    <p class="text-xs text-gray-500 mt-2 max-w-[200px] leading-relaxed">Redeem for rewards, climb the leaderboard</p>
                 </div>
             </div>
+
         </div>
     </section>
 
-    <footer class="text-center text-xs text-gray-400 py-8">
+    <!-- 
+      GLOBAL FOOTER 
+      Legal and structural administrative signature lines.
+    -->
+    <footer class="text-center text-xs text-gray-400 font-medium py-10 tracking-wide border-t border-gray-50">
         WellLoop · WPMIS — Powered by People &amp; Culture, Strathmore University
     </footer>
 

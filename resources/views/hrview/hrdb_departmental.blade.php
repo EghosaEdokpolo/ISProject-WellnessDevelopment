@@ -7,12 +7,14 @@
         <meta name="author" content="group 1">
         <meta name="description" content="The the Hr / people and culture analytical dashboard used to view metrics relation to staff wellness in strathmore University.">
 
-        <title>Dashboard-HR</title>
+        <title>Departmental View</title>
 
         <!--favicon-->
         <link rel="icon" href="../assets/Strathmore_uni_logo-notext.png" type="image/x-icon">
         
-        <link rel="stylesheet" href="../css/hr_view_style.css">
+        <!-- Laravel Vite directive to load compiled application bundles if needed -->
+        @vite(['resources/css/hr_view_style.css', 'resources/js/app.js'])
+
     </head>
 
     <body>
@@ -28,45 +30,71 @@
                 <div class="pillgroup1">
                     <span class="category-label">Dashboards</span> 
 
-                    <a href="hrdb_overview.html" class="nav-link"> 
+                    <a href="{{ route('dashboard.hr') }}" class="nav-link"> 
                         <img src="/images/analytics-icon.png" alt="analytics icon" class="nav-icon"> Overview
                     </a> 
 
-                    <a href="hrdb_impact.html" class="nav-link">
+                    <a href="{{ route('impact.analytics') }}" class="nav-link">
                         <img src="/images/Impact-icon.png" alt="impact icon" class="nav-icon" id="impact-icon">Impact
                     </a> 
 
-                    <a href="hrdb_retention.html" class="nav-link active">
+                    <a href="{{ route('retention.metrics') }}" class="nav-link">
                        <img src="/images/retention-icon1.png" alt="retention icon" class="nav-icon" id="retention-icon"> Retention
                     </a>
 
-                    <a href="hrdb_departmental.html" class="nav-link">
+                    <a href="{{ route('department.analysis') }}" class="nav-link active">
                         <img src="/images/department-icon.png" alt="department icon" class="nav-icon">Departmental
                     </a>
                 </div>
                 
                 <!--second category at the top of the page-->
-                <a href="hrdb_attendeetable.html" class="nav-link">
+                <a href="{{ route('attendees.index') }}" class="nav-link">
                     <img src="/images/attendance-icon.png" alt="attendees icon" class="nav-icon">Attendees
                 </a> 
 
-                <a href="hrdb_eventsmanagement.html" class="nav-link">
+                <a href="{{ route('events.management') }}" class="nav-link">
                     <img src="/images/events-icon.png" alt="events icon" class="nav-icon"> Events
                 </a> 
 
-                <a href="hrdb_settings.html" class="nav-link">
+                <a href="{{ route('settings.edit') }}" class="nav-link">
                     <img src="/images/settings-icon.png" alt="settings icon" class="nav-icon">Settings
                 </a>
             </nav>
         </header>
 
         <!--Title-->
-        <h1>Sustained Participation Rate</h1>
+        <h1>Departmental Engagement Growth</h1>
+
+        <p>Analysis of departments that moved from disengaged to engaged across the semester.</p>
 
         <!--page details-->
-        <p>% of staff who attend more than one wellness event per semester. Proves lasting appeal, not just novelty.</p>
+        <p>departments tracked</p>
+        <p>AVG AT SEMESTER START</p>
+        <p>AVG AT SEMESTER END</p>
+        <p>ORG WIDE GROWTH</p>
+        
+        <ol>
+                <p>Most Active - Top 5</p>
+            <li>this is list 1</li>
+            <li>this is list 2</li> 
+            <li>this is list 3</li> 
+        </ol>
 
-        <p>Below requires js and other tecniques to continue</p>
+        <ol>
+                <p>Needs Attention - Bottom 5</p>
+            <li>this is list 1</li>
+            <li>this is list 2</li> 
+            <li>this is list 3</li> 
+        </ol>
+ 
+
+        <!--in page links for different wellness categories-->
+        <a>Engaged Heatmap</a> 
+        <a>Ranked Table</a> 
+        <p>Export Report</p>
+        
+
+        <p><strong>NOTE </strong>more to be added under the categories i.e. single webpage developemtnt techniques</p>
 
     </body>
 </html>

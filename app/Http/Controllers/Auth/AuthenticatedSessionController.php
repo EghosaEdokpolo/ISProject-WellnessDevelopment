@@ -11,9 +11,7 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
+    /** Display the login view. */
     public function create(): View
     {
         return view('auth.loginpage');
@@ -24,10 +22,27 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Executes the email/staff_id password matching authentication logic
         $request->authenticate();
 
+        // Regenerates the session ID to prevent session fixation attacks
         $request->session()->regenerate();
 
+        // CODE ADDITION: Fetch the logged-in user to check their database role string
+        $user = Auth::user();
+
+        // If an HR admin logs in, route them immediately to the HR Overview page route
+        if ($user->role === 'hr_coordinator') {
+            return redirect()->intended(route('dashboard.hr'));
+
+        }
+
+        // If standard Staff logs in, route them to their personal page layout
+        if ($user->role === 'staff') {
+            return redirect()->intended(route('events.index'));
+        }
+
+         // Fallback default catch route if no user role explicitly matches
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

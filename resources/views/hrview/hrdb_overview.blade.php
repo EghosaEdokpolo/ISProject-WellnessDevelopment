@@ -111,7 +111,7 @@
                 </span>
             </div>
             <div class="metric-value">{{ number_format($totalPointsEarned) }}</div>
-            <div class="card-subtext">this semester across all staff</div>
+            <div class="card-subtext">this academic year across all staff</div>
         </div>
 
         <!-- CARD 3: Events This Semester -->
@@ -135,7 +135,7 @@
     <!--  Lagging Indicators row starts here  -->
     <h2 class="section-row-title">LAGGING INDICATORS — WELLNESS OUTCOMES</h2>
 
-    <!-- We re-use your favorite wrapping dashboard layout row -->
+    <!-- wrapping dashboard layout row -->
     <div class="dashboard-row">
 
         <!-- CARD 1: Wellness Impact Score -->
@@ -149,7 +149,7 @@
             <!-- Large trend metric indicator -->
             <div class="metric-value">{{ $avgLift > 0 ? '+' : '' }}{{ $avgLift }}</div>
             <div class="card-subtext">
-                avg WHO-5 pre→post delta · <a href="hrdb_impact.html" class="dashboard-inline-link">View Impact Dashboard →</a>
+                avg WHO-5 pre→post delta · <a href="{{ route('impact.analytics') }}" class="dashboard-inline-link">View Impact Dashboard →</a>
             </div>
         </div>
 
@@ -162,19 +162,16 @@
         </span>
     </div>
         
-        <!-- CHANGE THIS LINE: Prints out the dynamically calculated engagement percentage -->
+        <!-- Prints out the dynamically calculated engagement percentage -->
         <div class="metric-value text-purple">{{ $sustainedParticipationRate }}%</div>
         
         <div class="card-subtext">
-            attended 2+ events · <a href="hrdb_retention.html" class="dashboard-inline-link">View Retention Dashboard →</a>
+            attended 2+ events · <a href="{{ route('retention.metrics') }}" class="dashboard-inline-link">View Retention Dashboard →</a>
         </div>
     </div>
 
-    </div>
 
-            <!-- ========================================================
-            SECTION ROW 3: ANALYTICS & RECENT ACTIVITY
-            ======================================================== -->
+            <!-- SECTION ROW 3: ANALYTICS & RECENT ACTIVITY -->
         <div class="dashboard-row split-row">
 
             <!-- COLUMN 1: Wellness Category Analytics Chart Box -->

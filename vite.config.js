@@ -5,7 +5,10 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js',
-                 'resources/css/style.css', 'resources/css/hr_view_style.css'],
+                'resources/css/style.css', 'resources/css/hr_view_style.css',
+                'resources/js/hr_impact_filter.js' 
+                
+                ],
             refresh: true,
         }),
     ],

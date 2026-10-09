@@ -7,7 +7,7 @@
         <meta name="author" content="group 1">
         <meta name="description" content="The the Hr / people and culture analytical dashboard used to view metrics relation to staff wellness in strathmore University.">
 
-        <title>Departmental View</title>
+        <title>Department Engagement Growth</title>
 
         <!--favicon-->
         <link rel="icon" href="../assets/Strathmore_uni_logo-notext.png" type="image/x-icon">
@@ -62,39 +62,178 @@
             </nav>
         </header>
 
-        <!--Title-->
-        <h1>Departmental Engagement Growth</h1>
+        <main>
+            <!--Title-->
+            <h1>Departmental Engagement Growth</h1>
 
-        <p>Analysis of departments that moved from disengaged to engaged across the semester.</p>
+            <p class="caption">Analysis of departments across the acedemic year.</p>
+            
+            <h2 class="split-row">OVERVIEW</h2>
+                
+                <div class="dashboard-row dept">
 
-        <!--page details-->
-        <p>departments tracked</p>
-        <p>AVG AT SEMESTER START</p>
-        <p>AVG AT SEMESTER END</p>
-        <p>ORG WIDE GROWTH</p>
-        
-        <ol>
-                <p>Most Active - Top 5</p>
-            <li>this is list 1</li>
-            <li>this is list 2</li> 
-            <li>this is list 3</li> 
-        </ol>
+                    <!-- CARD 1: Departments Tracked -->
+                    <div class="container metric-card">
+                        <div class="card-header-line">
+                            <span class="card-label">DEPARTMENTS TRACKED</span>
+                        </div>
+                        <div class="metric-value text-blue">%</div>
+                    </div>
 
-        <ol>
-                <p>Needs Attention - Bottom 5</p>
-            <li>this is list 1</li>
-            <li>this is list 2</li> 
-            <li>this is list 3</li> 
-        </ol>
- 
+                    <!-- CARD 2: Engaged Departments -->
+                    <div class="container metric-card">
+                        <div class="card-header-line">
+                            <span class="card-label">ENGAGED DEPARTMENTS</span>
+                        </div>
+                        <div class="metric-value text-blue">%</div>
+                    </div>
 
-        <!--in page links for different wellness categories-->
-        <a>Engaged Heatmap</a> 
-        <a>Ranked Table</a> 
-        <p>Export Report</p>
-        
+                </div>
 
-        <p><strong>NOTE </strong>more to be added under the categories i.e. single webpage developemtnt techniques</p>
+                <!-- wrapping dashboard layout 2 -->
+                <div class="dashboard-row dept">
 
+                    <!-- CARD 1: most active -->
+                    <div class="container dept-card">
+                        <div class="card-header">
+                            <span class="card-label">MOST ACTIVE — TOP 5</span>
+                        </div>
+                        
+                        <!-- Row List Wrapper: Contains the list elements -->
+                        <div class="dept-list-wrapper">
+                            <!-- Individual List Row Item -->
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 2: least active -->
+                    <div class="container dept-card">
+                        <div class="card-header">
+                            <span class="card-label">LEAST ACTIVE — BOTTOM 5</span>
+                        </div>
+                        
+                        <!-- Row List Wrapper: Contains the list elements -->
+                        <div class="dept-list-wrapper">
+                            <!-- Individual List Row Item -->
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+
+                            <div class="dept-list-item">
+                                <span class="dept-item-name">help desk</span>
+                                <span class="dept-item-value">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            <h2 class="split-row">RANKED TABLE</h2>
+
+                <div class="table-container2">
+                        <table>
+                            <!--row 1-->
+                            <thead>
+                                <tr>
+                                    <th scope="col">Number(#)</th>
+                                    <th scope="col">Department</th>
+                                    <th scope="col">Staff</th>
+                                    <th scope="col">participant number</th>
+                                    <th scope="col">Participation Rate</th>
+                                    <th scope="col">Engagement status</th>
+                                </tr>
+                            </thead>
+                            
+                            <tbody>
+                        
+                            <!--row 2-->
+                                <tr>
+                                    <!-- number column -->
+                                    <td class="name-column">1</td>
+                                    <!-- department column -->
+                                    <td class="department-column">help desk</td>
+                                    
+                                    <!-- number column -->
+                                    <td class="name-column">1</td>
+                                    <!-- department column -->
+                                    <td class="department-column">help desk</td>
+                                    
+                                    <!-- number column -->
+                                    <td class="name-column">1</td>
+                                    <!-- department column -->
+                                    <td class="department-column">help desk</td>
+                                    
+                                </tr>
+                            <!--row 2-->
+                                <tr>
+                                    <!-- number column -->
+                                    <td class="name-column">1</td>
+                                    <!-- department column -->
+                                    <td class="department-column">help desk</td>
+                                    
+                                    <!-- number column -->
+                                    <td class="name-column">1</td>
+                                    <!-- department column -->
+                                    <td class="department-column">help desk</td>
+                                    
+                                    <!-- number column -->
+                                    <td class="name-column">1</td>
+                                    <!-- department column -->
+                                    <td class="department-column">help desk</td>
+                                    
+                                </tr>
+                            
+                             
+                            
+                            <!-- <tr>
+                                <td colspan="9">No registrations found.</td>
+                            </tr> -->
+                            
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                <button type="submit" id="export">Export Report (csv)</button>
+        </main>
     </body>
 </html>

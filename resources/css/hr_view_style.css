@@ -142,6 +142,16 @@ h1{
     margin-top: 50px;
 }
 
+h2{
+    margin-left: 100px;
+    margin-top: 30px;
+}
+
+h3{
+    margin-left: 70px;
+    margin:0%
+}
+
 /* head 2 styling */
 .mini-h2{
     display: flex;
@@ -1015,8 +1025,9 @@ main {
    ======================================================== */
 .filter-pill-group {
     display: flex;
+    justify-content: center;
     gap: 10px;
-    margin: 0 0 25px 0;
+    margin: 15px 0 0 0;
     flex-wrap: wrap; /* Allows pill boxes to wrap neatly onto mobile screen rows */
 }
 
@@ -1242,5 +1253,725 @@ main {
     display: inline-block;
 }
 
+/* ==========================================================================
+   IMPACT WHO-5 CHART STEP 2: BASE FRAMEWORK STYLING
+   ========================================================================== */
+
+/* Outer chart layout layout structural manager */
+.impact-chart-wrapper {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    margin-top: auto; /* Solid ground alignment anchor to bottom of the card panel */
+    padding-top: 20px;
+    box-sizing: border-box;
+}
+
+/* Y-Axis scale label stack controls formatting */
+.impact-yaxis-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 180px; /* Lock height plane window dimension mapping our layout guidelines */
+    font-size: 12px;
+    color: #71717a;
+    text-align: right;
+    width: 20px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+/* Central chart screen tracking container viewport window wrapper properties */
+.impact-viewport-track {
+    position: relative;
+    width: 100%;
+    height: 210px; /* Extends slightly lower to host x-axis monthly text labels safely */
+}
+
+
+/* ==========================================================================
+   IMPACT WHO-5 CHART STEP 3: CUSTOM INTERVAL GUIDELINES STYLING
+   ========================================================================== */
+
+.impact-grid-lines {
+    position: absolute; /* Frees container tracking from document flow so components stack cleanly */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 180px; /* Lock height plane window scale dimension exactly matching vertical bounds */
+    pointer-events: none; /* Disables click interactions so tooltips operate safely on top layers */
+    z-index: 1; /* Sets layer floor foundation flat on the bottom of the display pile */
+}
+
+/* Base style rule parameter mapping horizontal dotted guideline index positions */
+.impact-grid-lines .impact-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    border-bottom: 1px dotted #e4e4e7; /* Clean subtle grey dots tracking layout matching mockup */
+    height: 0;
+}
+
+/* Style for the strong zero base indicator floor track baseline stroke */
+.impact-grid-lines .impact-line-base {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    border-bottom: 2px solid #d4d4d8; /* Solid anchor ground baseline accent stripe line */
+    height: 0;
+}
+
+/* ==========================================================================
+   IMPACT WHO-5 CHART STEP 4: BARS STRIP & COLUMN PILLARS STYLING
+   ========================================================================== */
+
+/* Main row manager handling horizontal alignment across screen sizes cleanly */
+.impact-bars-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-around; /* Automatically handles balanced spacing across column areas */
+    align-items: flex-end; /* Locks elements directly to the base ground floor line coordinate track */
+    z-index: 2; /* Keeps bars operating on top layers over guidelines background graphics */
+}
+
+/* Individual month slot frame wrapper settings */
+.impact-month-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 70px;
+    justify-content: flex-end;
+    position: relative;
+}
+
+/* Flex group aligning our two vertical data pillars tightly side-by-side */
+.impact-pair-group {
+    display: flex;
+    align-items: flex-end; /* Ensures both graph columns rise straight from baseline floor */
+    gap: 4px; /* Crisp minimal gap separating Pre vs Post scores visualizations */
+    height: 180px; /* Lock height plane window scale dimension exactly matching background scale bounds */
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* The atomic vertical graph column node adjustments rules properties */
+.impact-pillar {
+    margin-bottom: 9px;
+    width: 18px;
+    border-radius: 3px 3px 0 0; /* Smooth slight rounded tops matching reference design profiles */
+    
+    /* Crucial: Dynamically reads percentages passed by our custom CSS properties inline codes */
+    height: var(--bar-height, 10%); 
+    
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.impact-pillar:hover {
+    filter: brightness(0.9); /* Shading reaction feedback response on mouse pointer hover coordinates */
+    transform: scaleY(1.02);
+}
+
+/* pre bar color */
+.bar-pre {
+    background-color: rgb(2, 51, 141)
+}
+
+/* post bar color */
+.bar-post {
+    background-color: rgb(205, 116, 7); 
+}
+
+/* X-Axis monthly text label typography settings */
+.impact-xaxis-label {
+    font-size: 12px;
+    color: #71717a;
+    margin-top: 6px;
+    height: 16px;
+    line-height: 16px;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   IMPACT WHO-5 CHART STEP 5: INTERACTIVE HOVER TOOLTIP STYLING
+   ========================================================================== */
+
+/* Active Background Strip Sleeve highlight color reaction on mouse hover overlay */
+.impact-month-column:hover {
+    background-color: rgba(161, 161, 170, 0.22); /* Smooth sleek gray selection backdrop block tint */
+    border-radius: 4px 4px 0 0;
+}
+
+/* Base parameters structuring our floating white data display card overlay box node */
+.impact-hover-tooltip {
+    position: absolute;
+    top: 20px; /* Positions floating layout window inside clear chart baseline bounds */
+    left: 50%;
+    transform: translateX(-15%); /* Secure offset margins wrapping safely over nearby graph items tracks */
+    background-color: #ffffff;
+    border: 1px solid #e4e4e7;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Rich floating backdrop soft glow drop shadow */
+    min-width: 110px;
+    z-index: 50; /* Guarantees tooltip stacks safely in front of moving text lines or data cells elements layers */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    
+    /* 1. LAYER TOGGLE HIDE: Keeps cards completely invisible out of view tracking grids boundaries */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* Allows mouse tracking movements to pass smoothly through the block frame space */
+    transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+}
+
+/* 2. LAYER TOGGLE SHOW: Reveals information floating window component instantly on row contact focus */
+.impact-month-column:hover .impact-hover-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Inner card typography formatting parameters variables */
+.impact-tooltip-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #18181b;
+    margin-bottom: 2px;
+}
+
+.impact-tooltip-row {
+    font-size: 13px;
+    margin: 0;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+/* pre tooltip text color */
+.impact-tooltip-row.text-light {
+    color:rgb(2, 51, 141)
+}
+
+/* post tooltip text color */
+.impact-tooltip-row.text-blue {
+    color: rgb(205, 116, 7); 
+}
+
+
 
 /* OVERVIEW IMPACT PAGE STYLING END */
+
+
+/* DEPARTMENTAL VIEW PAGE STYLING START */
+.dept{
+
+    padding: 0%;
+}
+/* Card Container Custom Settings Override */
+.dept-card {
+    background-color: #ffffff;
+    border-radius: 16px; /* Matches the smooth rounded corners in your image */
+    padding: 20px;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.03); /* Soft, subtle shadow */
+    min-height: 100px; /* Ensures the card doesn't shrink too much on smaller screens */
+    max-height: 300px; /* Prevents the card from growing too large on wider screens */
+    overflow: auto; 
+}
+
+/* Card Header Text Settings */
+.dept-card .card-label {
+    font-size: 14px;
+    color: #003366; 
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 20px; /* Space between title and the list item content below */
+}
+
+/* List Wrapper Layer spacing layout */
+.dept-list-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Breathing room if you loop and add more departments later */
+}
+
+/* The horizontal layout magic for your text rows */
+.dept-list-item {
+    display: flex;
+    justify-content: space-between; /* Pushes name to left margin and percentage to right margin */
+    align-items: center;
+    width: 100%;
+}
+
+/* Department Text Name Label */
+.dept-item-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827; /* Rich dark near-black slate text */
+}
+
+/* Performance Percentage Indicator Value */
+.dept-item-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #003366; /* Deep blue coloring to cleanly balance against the title text code style */
+}
+
+/* 1. This is your existing wrapper block (no changes needed, it is set up perfectly!) */
+.table-container2 {
+    border-radius: 16px; 
+    overflow: hidden;           
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5); 
+    width: 100%;
+    max-height: 670px;
+    overflow-x: auto;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* 2. Target the headers inside this specific table block container */
+.table-container2 table th {
+    /* Tells the cell to anchor relative to its scroll container boundary */
+    position: sticky;
+    
+    /* Binds the header exactly at the top pixel margin mark */
+    top: 0;
+    
+    /* Elevates the header plane layer so text rows slide behind it cleanly */
+    z-index: 10;
+    
+    /* Prevents background color from turning transparent during sticky states */
+    background-color: rgb(2, 51, 141); 
+}
+
+/* export button styling */
+
+#export{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30%;
+    margin-right: auto;
+    padding: 12px;
+    font-size: large;
+    background-color: rgb(204, 156, 74);     
+    color: black;
+    font-size: medium;
+    font-weight: bold;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-top: 10px;
+    
+}
+
+#export:active {
+    background-color: rgb(139, 105, 47);
+}
+/* DEPARTMENTAL VIEW PAGE STYLING END */
+
+/* RETENTION METRICS VIEW PAGE STYLING START */
+
+/* Page heading header layout wrapper settings panel components */
+.retention-title-area {
+    margin-bottom: 20px;
+    padding-left: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.retention-main-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Smooth padding gap separating header label strings from lag alerts badges */
+    flex-wrap: wrap;
+}
+
+.retention-page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin-left: 0 !important; /* Overriding your generic global h1 left-margin rules safely */
+    margin-top: 10px;
+}
+
+.retention-page-subtitle {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 6px;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* Row-scoping rule: Removes conflicting padding models on top overview tracks */
+.retention-top-cards.dashboard-row {
+    padding-left: 0;
+    padding-right: 0;
+    margin-bottom: 10px;
+}
+
+/* Split Graphs Section configurations framework row mappings */
+.retention-split-row.dashboard-row {
+    padding-left: 0;
+    padding-right: 0;
+    align-items: stretch;
+}
+
+.retention-chart-card {
+    flex: 1 1 450px !important; /* Locks layout side-by-side on desktop displays */
+    display: flex;
+    flex-direction: column;
+}
+
+.retention-chart-card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-left: 0;
+    margin-top: 0;
+}
+
+/* Table container card container tracking limits alignment block config */
+.retention-table-row {
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 0px;
+}
+
+.retention-table-card.container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.retention-table-card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-left: 0;
+    margin-top: 0;
+}
+
+/* Sticky layout rules adjustments explicitly for your .table-container2 system configuration */
+.table-container2 table {
+    width: 100%;
+    border-collapse: separate !important; /* Enables corner trimming alongside sticky execution */
+    border-spacing: 0;
+}
+
+.table-container2 table th {
+    background-color: rgb(2, 51, 141) !important; /* Maps back explicitly to your primary blue layout color tone */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 14px 18px;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.table-container2 table td {
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+/* Progress-bar flex layouts rendering the graphics cleanly inside table cells */
+.retention-progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.retention-progress-label {
+    font-size: 13px;
+    min-width: 45px;
+    text-align: right;
+}
+
+
+/* Outer layout structural parameters centering your chart blocks elements */
+.dropoff-chart-wrapper {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    margin-top: auto; /* Locks chart grid placement firmly to baseline container bottom bounds */
+    padding-top: 15px;
+    box-sizing: border-box;
+}
+
+/* Y-Axis vertical scales grouping framework text properties adjustments */
+.chart-yaxis-labels {
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    justify-content: space-between; /* Stretches the numbers out with perfect, proportional gaps */
+    height: 180px; /* Locks vertical system pixel matrix bounds window size */
+    font-size: 12px;
+    color: #71717a;
+    text-align: right;
+    width: 25px;
+    padding-bottom: 0px; /* Offsets labels so they line up cleanly with our grid line baselines */
+    box-sizing: border-box;
+    flex-shrink: 0; /* Prevents text elements from resizing unpredictably on narrow views */
+}
+
+/* Central tracking window track viewport bounding frame settings layout */
+.chart-viewport-track {
+    position: relative;
+    width: 100%;
+    height: 210px; /* Extends lower than the numbers to leave room for the monthly labels */
+}
+
+
+/* ==========================================================================
+    GRID GUIDELINES BACKGROUND LAYER STYLING
+   ========================================================================== */
+
+.chart-grid-lines {
+    position: absolute; /* Takes the layer out of standard document flow so it stacks in place */
+    top: 0;
+    left: 0;
+    width: 100%;
+    
+    /* Matches our 180px high number track scale perfectly from Step 2 */
+    height: 180px; 
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Spreads our 5 lines out perfectly with equal mathematical gaps */
+    
+    pointer-events: none; /* Crucial: Mouse clicks ignore these lines so tooltip hovers work smoothly */
+    z-index: 1; /* Puts this layer flat on the bottom floor of the stack */
+}
+
+/* Style for the upper dashed index marker lines */
+.chart-grid-lines .grid-line {
+    border-bottom: 1px dotted #e4e4e7; /* Light grey dots tracking indicators */
+    width: 100%;
+    height: 0; /* Ensures the element box has no physical height footprint itself */
+}
+
+/* Style for the solid zero baseline floor track line */
+.chart-grid-lines .grid-line-base {
+   align-items: flex-end;
+    border-bottom: 2px solid #d4d4d8; /* Solid, slightly darker ground baseline anchor stroke */
+    width: 100%;
+    height: 0;
+}
+
+/* ==========================================================================
+   4B. SIDE-BY-SIDE CHART BARS ENGINE STYLING
+   ========================================================================== */
+
+/* Main row wrapper system aligning our months horizontally */
+.chart-bars-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-around; /* Automatically spaces columns across screen sizes with equal pads */
+    align-items: flex-end; /* Aligns content blocks to stick flat on the chart floor baseline */
+    z-index: 2; /* Keeps bars stacked neatly in front of the guideline assets from Step 3 */
+}
+
+/* Individual monthly block containing bars and text label */
+.chart-month-column {
+    display: flex;
+    align-items: flex-end; /* Ensures the bottom of the column aligns with the chart baseline */
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 75px;
+    justify-content: flex-end;
+    position: relative;
+}
+
+/* Flex layout pairing our Registered vs Attended pillars snugly side-by-side */
+.bars-pair-group {
+    display: flex;
+    align-items: flex-end; /* Anchors the bottom edge of both bars to grow upwards */
+    gap: 4px; /* Crisp minimal gap separating the gray bar and blue bar */
+    height: 180px; /* Perfectly matches our master grid tracking line bounds height */
+    width: 100%;
+    justify-content: center;
+    padding-bottom: 9px; /* Leaves room right on top of the solid baseline track */
+    box-sizing: border-box;
+}
+
+/* The atomic vertical bar node shape definitions */
+.vertical-pillar {
+    width: 16px;
+    border-radius: 3px 3px 0 0; /* Smooth rounded caps matching your original layout image */
+    
+    /* Crucial Engine Component: Dynamically targets the value sent by our inline HTML */
+    height: var(--bar-height, 10%); 
+    
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* Subtle mouse reaction effect when hovering directly on a single bar element */
+.vertical-pillar:hover {
+    filter: brightness(0.9); 
+    transform: scaleY(1.02); /* Slight pop-out feedback response */
+}
+
+/* Specific color mapping definitions matching your chart specifications */
+.dynamic-bar-reg {
+    background-color: #dbdbdb; /* Light neutral gray for Registered users */
+}
+
+.dynamic-bar-att {
+    background-color: #4f46e5; /* Vibrant corporate royal indigo-blue for Attended users */
+}
+
+/* X-Axis typography label alignment formatting properties */
+.chart-xaxis-label {
+    font-size: 12px;
+    color: #71717a;
+    margin-top: 6px;
+    height: 16px;
+    line-height: 16px;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   5B. INTERACTIVE SELECTION STRIP & TOOLTIP OVERLAY STYLING
+   ========================================================================== */
+
+/* Active/Hover Background Strip Track layout definition mapping your artwork */
+.chart-month-column.active-column,
+.chart-month-column:hover {
+    background-color: rgba(161, 161, 170, 0.25); /* Translucent soft grey highlight sleeve barrier */
+}
+
+/* Base structural setup for the floating white card layout node */
+.chart-hover-tooltip {
+    position: absolute;
+    top: 30px; /* Aligns the card float height inside safe viewport bounds zone */
+    left: 50%;
+    transform: translateX(-15%); /* Offsets layout alignment safely over adjacent graph columns tracks */
+    background-color: #ffffff; 
+    border: 1px solid #e4e4e7;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Deep premium floating elevation shadow */
+    min-width: 120px;
+    z-index: 50; /* Keeps the overlay card floating safely on top of all table/bars panels elements */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    
+    /* 1. HIDE ENGINE: By default, tooltips remain completely hidden away out of view */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* Prevents text bounds from interrupting regular grid mouse hovering tracking actions */
+    transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+}
+
+/* 2. REVEAL ENGINE: When a column is hovered (or has the active utility class), display card smoothly */
+.chart-month-column:hover .chart-hover-tooltip,
+.chart-month-column.active-column .chart-hover-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Inner typography styling parameters inside data boxes cards fields templates values */
+.tooltip-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #18181b;
+    margin-bottom: 2px;
+}
+
+.tooltip-row {
+    font-size: 13px;
+    margin: 0;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+/* Grey labels for registration figures tracking values strings formatting references */
+.tooltip-row.text-light {
+    color: #71717a; 
+}
+
+/* Deep royal color highlight explicitly matching your 'Attended' blue key metric theme color parameter link track layout */
+.tooltip-row.text-dark {
+    color: #4f46e5; 
+}
+
+.caption-custom {
+    margin: 0;          /* clear conflicting margins with h1 */
+    padding-left: 70px;  
+    margin-bottom: 5px;
+    font-size: 15px;
+    color: #6b7280;
+
+}
+
+/* ==========================================================================
+   FORM CONTROLS: FILTER BOX STYLING MODULE
+   ========================================================================== */
+
+/* Structure wrapper ensuring clean vertical layout stacking behavior */
+.filter-box-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Perfect, crisp breathing distance between label text and input field box */
+    width: 100%;
+    max-width: 420px; /* Optional cap: prevents field box from stretching awkwardly across massive monitors */
+    box-sizing: border-box;
+}
+
+/* Explicit label formatting override targeting clean text styles */
+.filter-box-group .form_labels {
+    font-size: 14px;
+    font-weight: 600; /* Crisp bold appearance matching your system parameters track */
+    color: #111827; /* Rich dark charcoal font string */
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Base input field styling configured to perfectly map your reference screenshot image */
+.filter-box-group input[type="text"] {
+    width: 100%;
+    height: 40px; /* Comfortable modern field touch height */
+    margin: 7px;
+    padding: 10px 14px;
+    background-color: #f9fafb; /* Extremely light soft grey inner box background shade */
+    
+    /* Crucial boundaries styling matching your visual reference asset exactly */
+    border: 1px solid #babcbe; /* Balanced silver gray outline border profile stroke */
+    border-radius: 8px; /* Clean, subtle curved corner treatment */
+    
+    font-size: 14px;
+    color: #374151;
+    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.15s ease-in-out;
+}
+
+/* Focus Interactive Pseudo-state element reaction on mouse click contact operations */
+.filter-box-group input[type="text"]:focus {
+    background-color: #ffffff; /* Swaps background to crisp white on input interaction */
+    border-color: rgb(2, 51, 141); /* Sharp highlight boundary line flashing your corporate blue theme color */
+    box-shadow: 0 0 0 3px rgba(2, 51, 141, 0.15); /* Soft ambient glowing blue backdrop accent halo ring */
+}
+
+
+/* RETENTION METRICS VIEW PAGE STYLING END */ 

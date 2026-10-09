@@ -7,14 +7,74 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 
+// new controller homes
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Hr\HrAttendeeController;
+use App\Http\Controllers\Hr\HrEventsController;
+use App\Http\Controllers\Hr\HrOverviewController;
+use App\Http\Controllers\Hr\HrImpactController;
+use App\Http\Controllers\Hr\HrRetentionController;
+use App\Http\Controllers\Hr\HrDepartmentController;
+use App\Http\Controllers\Hr\HrSettingsController;
+
+// Redirect root URL directly to the landing page
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+/**
+ * The ['auth'] middleware checks if a browser cookie exists. 
+ * If a hacker tries to visit any page inside here without logging in, 
+ * Laravel kicks them straight back to the login screen automatically!
+ */
 
 // POINTER: 'auth' middleware means "must be logged in" — Laravel's built-in
 // authentication (from `laravel/breeze` or `laravel/jetstream`, which you'd
 // install for the login/register screens themselves) handles that part.
 Route::middleware('auth')->group(function () {
+
+    /**
+     * 1. prefix('hr') means all URLs inside here will automatically start with /hr (e.g. /hr/overview)
+     * 2. name('hr.') prefixes all shortcuts (e.g. route('hr.overview')) to keep naming conflicts clean
+     */
+
+    Route::prefix('hr')->group(function () {
+        
+        // Maps directly to the brand-new single-purpose controller index method!
+        Route::get('/overview', [HrOverviewController::class, 'index'])->name('dashboard.hr');
+
+        // This maps /hr/impact to our single-purpose controller while preserving your link name!
+        Route::get('/impact', [HrImpactController::class, 'index'])->name('impact.analytics');
+        
+        // This maps /hr/retention to our new single-purpose controller while preserving your link name!
+        Route::get('/retention', [HrRetentionController::class, 'index'])->name('retention.metrics');
+        
+        // This maps /hr/departmental to our new single-purpose controller while preserving your link name!
+        Route::get('/departmental', [HrDepartmentController::class, 'index'])->name('department.analysis');
+        
+        // This maps /hr/attendees to our new single-purpose controller while preserving your link name!
+        Route::get('/attendees', [HrAttendeeController::class, 'index'])->name('attendees.index');
+
+        // This maps /hr/events to our new single-purpose controller while preserving your link name!
+        Route::get('/events', [HrEventsController::class, 'index'])->name('events.management');
+
+        // This maps /hr/settings to our new single-purpose controller while preserving your link name!
+        Route::get('/settings', [HrSettingsController::class, 'index'])->name('settings.edit');
+        
+    });
+
+
+    
+    /** THE  STAFF MEMBER ZONE
+     * Keeps employee personal views separated cleanly from administration data channels.
+     */
+    Route::prefix('staff')->name('staff.')->group(function () {
+        // Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('dashboard');
+    });
+
+
+    
 
     Route::get('/dashboard', function () {
         return auth()->user()->isHrCoordinator()
@@ -53,27 +113,4 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/rewards', [DashboardController::class, 'rewards'])->name('rewards.index');
 
-
-    // --- HR Coordinator-only routes ---
-    Route::middleware('hr')->group(function () {
-        Route::get('/events-management', [DashboardController::class, 'eventmanagement'])->name('events.management');
-
-        Route::get('/impact-analytics', [DashboardController::class, 'impactAnalytics'])->name('impact.analytics');
-
-        Route::get('/department-analysis', [DashboardController::class, 'departmentanalysis'])->name('department.analysis');
-
-        Route::get('/retention-metrics', [DashboardController::class, 'retentionmetrics'])->name('retention.metrics');
-
-        Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.edit');
-        Route::post('/settings', [DashboardController::class, 'updateSettings'])->name('settings.update');
-
-        Route::get('/hr/overview', [DashboardController::class, 'hrOverview'])->name('dashboard.hr');
-        Route::get('/attendees', [DashboardController::class, 'attendees'])->name('attendees.index');
-
-        
-        Route::get('/events/create', [EventController::class, 'create'])->name('events.create');    
-        // Route::post('/events', [EventController::class, 'store'])->name('events.store');
-        // Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-
-        });
 });require __DIR__.'/auth.php';

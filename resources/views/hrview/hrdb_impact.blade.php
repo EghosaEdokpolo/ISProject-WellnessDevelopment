@@ -7,10 +7,14 @@
         <meta name="author" content="group 1">
         <meta name="description" content="This is the plain base page for IS project.">
 
-        <title>First webpage screen</title>
+        <title>Wellness Impact Dashboard</title>
+
+        <!-- Meta tag for the impact analytics route -->
+        <meta name="impact-route" content="{{ route('impact.analytics') }}">
+
         <link rel="icon" href="../assets/Strathmore_uni_logo-notext.png" type="image/x-icon">
         <!-- Laravel Vite directive to load compiled application bundles if needed -->
-        @vite(['resources/css/hr_view_style.css', 'resources/js/app.js'])
+        @vite(['resources/css/hr_view_style.css', 'resources/js/app.js', 'resources/js/hr_impact_filter.js'])
     </head>
 
     <body>
@@ -62,176 +66,180 @@
         <!--Title-->
         <h1>Wellness Impact Score</h1>
 
-        <!--page details-->
-        <p> Based on the"WHO-5 Well-Being Index". Score below 13 indicates poor wellbeing for Pre vs post comparison per event.</p>
+            <p class="caption">WHO-5 Well-Being Index - validated instrument (score 0–25). Score below 13 indicates poor wellbeing. Pre vs post comparison per event.</p>
 
-                <!-- ========================================================
-             MAIN CONTENT WINDOW AREA
-             ======================================================== -->
-        <main class="dashboard-wrapper">
-
-            <!-- MASTER DASHBOARD TITLE AND DETAILS BLOCK -->
-            <div class="dashboard-title-area">
-                <h1>Wellness Impact Score</h1>
-                <!-- Mockup Status Label Badge -->
-                <span class="badge badge-lagging">
-                    <span class="badge-dot"></span> Lagging
-                </span>
-                <p class="caption">WHO-5 Well-Being Index — validated instrument (score 0–25). Score below 13 indicates poor wellbeing. Pre vs post comparison per event.</p>
-            </div>
-
-            <!-- ========================================================
-                 PHASE 1: CATEGORY FILTER BUTTON PILLS
-                 ======================================================== -->
-            <!-- Flex wrap allows these button pills to cascade smoothly on mobile screen views -->
-            <div class="filter-pill-group">
-                <a href="#" class="filter-pill active">All</a> 
-                <a href="#" class="filter-pill">Physical</a> 
-                <a href="#" class="filter-pill">Mental</a>
-                <a href="#" class="filter-pill">Financial</a>
-                <a href="#" class="filter-pill">Social</a>
-            </div>
-
-            <!-- ========================================================
-                 PHASE 2: TOP SUMMARY HIGHLIGHT CARD ROW
-                 ======================================================== -->
-            <!-- Reusing your favorite utility dashboard flex row to map 4 cards across the display monitor -->
-            <div class="dashboard-row">
+            <!-- MAIN CONTENT AREA-->
+            <main class="dashboard-wrapper">
+           
+            <!-- Reusing dashboard flex row to map 4 cards across the display monitor -->
+            <div class="dashboard-row cards-container-wrapper">
                 
                 <!-- Card 1: Avg WHO-5 Lift -->
                 <div class="container metric-card">
                     <span class="card-label">AVG WHO-5 LIFT</span>
-                    <div class="metric-value text-green">+6.4</div>
+                    <div class="metric-value text-green">{{ $avgLift }}</div>
                     <div class="card-subtext">points gained (0–25 scale)</div>
                 </div>
 
                 <!-- Card 2: Avg Satisfaction -->
                 <div class="container metric-card">
-                    <span class="card-label">AVG SATISFACTION</span>
-                    <div class="metric-value text-blue">4.3/5</div>
-                    <div class="card-subtext">across filtered events</div>
+                    <span class="card-label">AVG SATISFACTION - PRE EVENT</span>
+                    <div class="metric-value text-blue">{{ $avgPreScore }}/5</div>
                 </div>
 
                 <!-- Card 3: 4-6 Wk Follow-up -->
                 <div class="container metric-card">
-                    <span class="card-label">4–6 WK FOLLOW-UP</span>
-                    <div class="metric-value text-orange">17.2</div>
-                    <div class="card-subtext">sustained wellbeing</div>
+                    <span class="card-label">AVG SATISFACTION - POST EVENT</span>
+                    <div class="metric-value text-blue">{{ $avgPostScore }}/5</div>
                 </div>
 
-                <!-- Card 4: Events in View -->
+                <!-- Card 4: Events in View how many distinct events 
+                 have collected wellness evaluation submissions-->
                 <div class="container metric-card">
-                    <span class="card-label">EVENTS IN VIEW</span>
-                    <div class="metric-value text-dark">6</div>
-                    <div class="card-subtext">of 6 this semester</div>
+                    <span class="card-label">EVENTS WITH WELLNESS RESPONSES</span>
+                    <div class="metric-value text-dark">{{ $eventsInView }}</div>
+                    <div class="card-subtext">of {{ $eventsThisSemester }} this Academic Year</div>
                 </div>
+                
+            </div> <!-- Close cards-container-wrapper -->
 
+            
+            <!-- Flex wrap allows these button pills to cascade smoothly on mobile screen views -->
+            <!--  Filter Pill Selection Track with JavaScript Hooks -->
+            <div class="filter-pill-group">
+                <!-- We use data-category attributes so JavaScript knows which section was clicked -->
+                <button type="button" data-category="all" class="filter-pill {{ $activeFilter === 'all' ? 'active' : '' }}">All</button> 
+                <button type="button" data-category="physical" class="filter-pill {{ $activeFilter === 'physical' ? 'active' : '' }}">Physical</button> 
+                <button type="button" data-category="mental" class="filter-pill {{ $activeFilter === 'mental' ? 'active' : '' }}">Mental</button>
+                <button type="button" data-category="financial" class="filter-pill {{ $activeFilter === 'financial' ? 'active' : '' }}">Financial</button>
+                <button type="button" data-category="social" class="filter-pill {{ $activeFilter === 'social' ? 'active' : '' }}">Social</button>
             </div>
+         
+            
+                 <div class="dashboard-row split-row">
 
-            <!-- ========================================================
-                 PHASE 3: GRAPHICS ANALYTICS ROW (BARS & TREND LINE FRAME)
-                 ======================================================== -->
-            <div class="dashboard-row split-row">
+                <!-- Left Graphic Block: Integrated WHO-5 Dynamic Chart Box Container -->
+                    <div class="container chart-display-card">
+                        <h2>WHO-5 Pre / Post</h2>
+                        <p class="chart-subtitle-text">Average group scores on 0-25 scale</p>
+                        
+                        <!-- Outer custom chart alignment and scaling layer -->
+                        <div class="impact-chart-wrapper">
+                            
+                            <!-- Y-Axis Vertical Scale Numbers (Proportional to the 0-25 WHO-5 scale) -->
+                            <div class="impact-yaxis-labels">
+                                <span>25</span>
+                                <span>14</span>
+                                <span>7</span>
+                                <span>0</span>
+                            </div>
 
-                <!-- Left Graphic Block: Triple Column Bar Chart Box Container -->
-                <div class="container chart-display-card">
-                    <h2>WHO-5 Pre / Post / Follow-up by Event</h2>
-                    <p class="chart-subtitle-text">Average group scores on 0-25 scale · grey = follow-up not yet collected</p>
-                    
-                    <!-- GRAPH CANVAS PLACEHOLDER: We turn this card into a vertical box column -->
-                    <div class="mock-graphic-space">
-                        <p class="mock-placeholder-text">[ TRIPLE BAR GRAPH CHART CANVAS PLACEHOLDER ]</p>
-                    </div>
-                </div>
+                           
+                        
 
-                <!-- Right Graphic Block: Impact Lift Trend Line Box Container -->
-                <div class="container chart-display-card">
-                    <h2>Impact lift trend</h2>
-                    <p class="chart-subtitle-text">WHO-5 gain (post - pre) per event</p>
-                    
-                    <!-- GRAPH CANVAS PLACEHOLDER -->
-                    <div class="mock-graphic-space">
-                        <p class="mock-placeholder-text">[ TREND LINE GRAPH CHART CANVAS PLACEHOLDER ]</p>
-                    </div>
-                </div>
+                <!-- The Central Graph View Window Track -->
+                    <div class="impact-viewport-track">
+                        
+                        <!-- Custom WHO-5 Guideline Background Track Layer -->
+                        <div class="impact-grid-lines">
+                            <div class="impact-line level-25" style="bottom: 100%;"></div>
+                            <div class="impact-line level-14" style="bottom: 56%;"></div>
+                            <div class="impact-line level-7" style="bottom: 28%;"></div>
+                            <div class="impact-line-base" style="bottom: 0;"></div>
+                        </div>
 
+            <!--  table bars-->
+                        <!-- STEP 4: AUTOMATED DYNAMIC 12-MONTH STRIP ROW LOOP -->
+                <div class="impact-bars-strip" id="graph-bars-container">
+                    @foreach($graphBars as $monthName => $bars)
+                        
+                        <!-- Individual Month Column Slot Block Node -->
+                        <div class="impact-month-column">
+                            <div class="impact-pair-group">
+                                
+                                <!-- Pre-Event Pillar Pulls calculated percentage height -->
+                                <div class="impact-pillar bar-pre" style="--bar-height: {{ $bars['pre_height'] }}%;"></div>
+                                
+                                <!-- Post-Event Pillar Pulls calculated percentage height -->
+                                <div class="impact-pillar bar-post" style="--bar-height: {{ $bars['post_height'] }}%;"></div>
+                            
+                            </div>
+                            <!-- Month Text Label printed right underneath the baseline floor line -->
+                            <span class="impact-xaxis-label">{{ $monthName }}</span>
+
+                            <!-- FLOATING INFORMATION CARD INTERACTIVE OVERLAY BOX TOOLTIP -->
+                            <div class="impact-hover-tooltip">
+                                <h4 class="impact-tooltip-title">{{ $monthName }}</h4>
+                                <p class="impact-tooltip-row text-light">Pre-event: <span>{{ $bars['pre_raw'] }}</span></p>
+                                <p class="impact-tooltip-row text-blue">Post-event: <span>{{ $bars['post_raw'] }}</span></p>
+                            </div>
+                        </div>
+
+                    @endforeach
+                </div> <!-- End of #graph-bars-container -->
+        </div> <!-- End of .impact-viewport-track -->
+    </div> <!-- End of .impact-chart-wrapper -->
+
+            
             </div>
+        </div>
 
-            <!-- ========================================================
-                 PHASE 4: DENSE REGISTRATION METRICS DATA TABLE
-                 ======================================================== -->
+            <!-- DYNAMIC  DATA TABLE BODY ROW -->
             <div class="table-card-wrapper">
                 <div class="table-responsive-container">
                     <table class="impact-data-table">
                         <thead>
                             <tr>
                                 <th scope="col">Event</th>
-                                <th scope="col" class="center-text">n</th>
+                                <th scope="col" class="center-text">Number Registered</th>
                                 <th scope="col" class="center-text">Pre</th>
                                 <th scope="col" class="center-text">Post</th>
-                                <th scope="col" class="center-text">Lift</th>
+                                <th scope="col" class="center-text">Improvement Score</th>
                                 <th scope="col" class="center-text">Follow-up</th>
                             </tr>
                         </thead>
 
-                        <tbody>
-                            <tr>
-                                <td class="event-name-cell">Yoga & Mindfulness</td>
-                                <td class="center-text metric-number">34</td>
-                                <td class="center-text metric-number">13.1</td>
-                                <td class="center-text metric-number">18.5</td>
-                                <td class="center-text text-green font-bold">+5.4</td>
-                                <td class="center-text metric-number">17.0</td>
-                            </tr>
-                            <tr>
-                                <td class="event-name-cell">Staff Hike — Karura Forest</td>
-                                <td class="center-text metric-number">52</td>
-                                <td class="center-text metric-number">12.0</td>
-                                <td class="center-text metric-number">19.7</td>
-                                <td class="center-text text-green font-bold">+7.7</td>
-                                <td class="center-text metric-number">18.0</td>
-                            </tr>
-                            <tr>
-                                <td class="event-name-cell">Financial Wellness Forum</td>
-                                <td class="center-text metric-number">41</td>
-                                <td class="center-text metric-number">13.8</td>
-                                <td class="center-text metric-number">17.7</td>
-                                <td class="center-text text-green font-bold">+3.9</td>
-                                <td class="center-text metric-number">16.3</td>
-                            </tr>
-                            <tr>
-                                <td class="event-name-cell">Breathwork Session</td>
-                                <td class="center-text metric-number">38</td>
-                                <td class="center-text metric-number">12.2</td>
-                                <td class="center-text metric-number">19.1</td>
-                                <td class="center-text text-green font-bold">+6.9</td>
-                                <td class="center-text metric-number">17.5</td>
-                            </tr>
-                            <tr>
-                                <td class="event-name-cell">Cross-Dept Social Mixer</td>
-                                <td class="center-text metric-number">96</td>
-                                <td class="center-text metric-number">14.5</td>
-                                <td class="center-text metric-number">20.8</td>
-                                <td class="center-text text-green font-bold">+6.3</td>
-                                <td class="center-text dash-placeholder">—</td>
-                            </tr>
-                            <tr>
-                                <td class="event-name-cell">Mental Health Talk</td>
-                                <td class="center-text metric-number">64</td>
-                                <td class="center-text metric-number">11.5</td>
-                                <td class="center-text metric-number">19.5</td>
-                                <td class="center-text text-green font-bold">+8.0</td>
-                                <td class="center-text dash-placeholder">—</td>
-                            </tr>
+                                             
+                        <tbody id="table-rows-container">
+                            <!-- The loop reads packaged collection variables from the controller -->
+                            @foreach($eventsTableRows as $row)
+                                <tr>
+                                    <!-- 1. Event Name Column -->
+                                    <td class="event-name-cell">{{ $row['name'] }}</td>
+                                    
+                                    <!-- 2. Number of Participants (n) Column -->
+                                    <td class="center-text metric-number">{{ $row['participants'] }}</td>
+                                    
+                                    <!-- 3. Average Pre-Event Score Column -->
+                                    <td class="center-text metric-number">{{ $row['pre_avg'] }}</td>
+                                    
+                                    <!-- 4. Average Post-Event Score Column -->
+                                    <td class="center-text metric-number">{{ $row['post_avg'] }}</td>
+                                    
+                                    <!-- 5. Growth Lift Column (We apply conditional text colors dynamically) -->
+                                    <!-- $row['is_positive'] checks if the lift value is positive to flag it green -->
+                                    <td class="center-text font-bold metric-number text">
+                                        {{ $row['lift'] }}
+                                    </td>
+                                    
+                                    <!-- 6. Follow-up Baseline Metrics Column -->
+                                    <td class="center-text metric-number">{{ $row['follow_up'] }}</td>
+                                </tr>
+                            @endforeach
+
+                            <!-- SAFE FALLBACK SHIELD: If your database table has 0 total rows, print this notice -->
+                            @if(count($eventsTableRows) === 0)
+                                <tr>
+                                    <td colspan="6" class="center-text dash-placeholder" style="padding: 30px;">
+                                        No active event evaluation logs found for this filter category.
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- Bottom Description Notice Footnote -->
-                <p class="table-footnote-notice">WHO-5 Well-Being Index — validated instrument. Score 0–25. Score below 13 indicates poor wellbeing.</p>
             </div>
 
         </main>
-
     </body>
 </html>

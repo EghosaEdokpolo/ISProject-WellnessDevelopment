@@ -3,58 +3,46 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\PointsTransaction;
 use App\Models\Registration;
 use App\Models\Waiver;
-use App\Services\PointsService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class RegistrationController extends Controller
 {
-    // "Register" button on an event card
     public function store(Request $request, Event $event): RedirectResponse
     {
-        // POINTER: this checks the ROLE, not just "are you logged in" (that
-        // part is already handled by the 'auth' middleware in web.php).
-        // Without this, an HR Coordinator account could still hit this URL
-        // directly and register as an attendee, muddying the Attendees table.
-        abort_unless($request->user()->isStaff(), 403, 'Only staff can register for events.');
+        $user = $request->user();
+        $existing = Registration::where('user_id', $user->id)->where('event_id', $event->id)->first();
+        if ($existing) return redirect()->route('registrations.waiver', $existing)->with('status', 'Already registered.');
 
-        // firstOrCreate: if this user already has a registration for this event,
-        // reuse it instead of erroring — makes the button idempotent (safe to
-        // click again if e.g. the page reloads).
-        $registration = Registration::firstOrCreate([
-            'user_id' => $request->user()->id,
-            'event_id' => $event->id,
-        ]);
-
-        // Next stop in the flow is the indemnity waiver, matching your prototype
-        return redirect()->route('registrations.waiver', $registration);
+        $registration = Registration::create(['user_id' => $user->id, 'event_id' => $event->id, 'status' => 'registered']);
+        return redirect()->route('registrations.waiver', $registration)->with('status', 'Registered! Please sign the waiver.');
     }
 
-    public function waiverForm(Registration $registration): \Illuminate\View\View
+    public function waiverForm(Registration $registration): View
     {
+        abort_unless(auth()->id() === $registration->user_id, 403);
         return view('events.waiver', compact('registration'));
     }
 
-    public function waiverStore(Request $request, Registration $registration, PointsService $points): RedirectResponse
+    public function waiverStore(Request $request, Registration $registration): RedirectResponse
     {
-        $data = $request->validate([
-            'signature_name' => ['required', 'string', 'max:255'],
-            'agree' => ['accepted'], // must be checked — "accepted" requires true/1/"on"/"yes"
-        ]);
+        abort_unless(auth()->id() === $registration->user_id, 403);
+        $data = $request->validate(['signature_name' => ['required', 'string', 'max:255'], 'agree' => ['accepted']]);
 
-        Waiver::create([
-            'registration_id' => $registration->id,
-            'signature_name' => $data['signature_name'],
-            'signed_at' => now(),
-            'ip_address' => $request->ip(),
-        ]);
+        Waiver::updateOrCreate(['registration_id' => $registration->id], ['signature_name' => $data['signature_name'], 'signed_at' => now()]);
+        $this->awardPointsOnce($registration, 'waiver_signed', 5);
 
-        // Consent completion earns points immediately, per your Rewards screen
-        $points->award($request->user(), 'consent');
+        return redirect()->route('checkin.show', $registration)->with('status', 'Waiver signed.');
+    }
 
-        // Next: the QR code / check-in page
-        return redirect()->route('checkin.show', $registration);
+    private function awardPointsOnce(Registration $registration, string $reason, int $points): void
+    {
+        if (PointsTransaction::where('registration_id', $registration->id)->where('reason', $reason)->exists()) return;
+        PointsTransaction::create(['user_id' => $registration->user_id, 'registration_id' => $registration->id, 'reason' => $reason, 'points' => $points]);
+        $registration->user->increment('points_balance', $points);
     }
 }

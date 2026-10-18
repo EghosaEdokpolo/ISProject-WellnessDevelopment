@@ -1,239 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<!--meta data about the page that isnt seen-->
-        <meta charset="UTF-8">
-        <meta name="author" content="group 1">
-        <meta name="description" content="The the Hr / people and culture analytical dashboard used to view metrics relation to staff wellness in strathmore University.">
-
-        <title>Department Engagement Growth</title>
-
-        <!--favicon-->
-        <link rel="icon" href="../assets/Strathmore_uni_logo-notext.png" type="image/x-icon">
-        
-        <!-- Laravel Vite directive to load compiled application bundles if needed -->
-        @vite(['resources/css/hr_view_style.css', 'resources/js/app.js'])
-
-    </head>
-
-    <body>
-        <!--data about the page that is seen-->
-            <div class="header-title">
-                <img src="../assets/Strathmore_uni_logo-notext.png" alt="Strathmore University Logo">
-                Strathmore University - Wellness Programme Management & Impact System (WPMIS)
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departmental Engagement</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}?v=2">
+    @vite(['resources/css/hr_view_style.css', 'resources/js/app.js'])
+    <style>
+        .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; padding:0 4% 20px; }
+        .kpi-card { background:#fff; border-radius:16px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+        .kpi-label { color:#6a7e9a; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
+        .kpi-value { font-size:28px; font-weight:700; color:#02338d; }
+        .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:0 4% 20px; }
+        @media (max-width:700px){ .two-col { grid-template-columns:1fr; } }
+        .col-card { background:#fff; border-radius:14px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+        .col-card h3 { color:#02338d; margin:0 0 14px; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; }
+        .dept-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f0f0f0; }
+        .dept-row:last-child { border-bottom:none; }
+        .dept-name { color:#1f2937; font-weight:600; font-size:14px; }
+        .dept-rate { font-weight:700; color:#02338d; }
+        .pill-engaged { background:#d4f4dd; color:#0a7b2b; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; }
+        .pill-developing { background:#fff4cf; color:#a87600; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; }
+        .pill-disengaged { background:#ffe0e0; color:#b00; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; }
+        .table-wrap { padding:0 4% 40px; }
+        .data-table { width:100%; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-collapse:collapse; }
+        .data-table th { background:#02338d; color:#fff; padding:12px; text-align:left; font-size:13px; }
+        .data-table td { padding:12px; border-bottom:1px solid #eee; font-size:14px; }
+        .export-btn { display:inline-block; margin:0 4% 20px; padding:10px 22px; background:#cca04a; color:#000; border-radius:10px; text-decoration:none; font-weight:700; font-size:14px; }
+        .section-title { padding:0 4%; margin-top:20px; color:#02338d; font-size:18px; font-weight:700; }
+    </style>
+</head>
+<body>
+    <div class="header-title">
+        <img src="{{ asset('assets/Strathmore_uni_logo-notext.png') }}" alt="Strathmore University Logo">
+        Strathmore University - Wellness Programme Management & Impact System (WPMIS)
+    </div>
+    <header class="nav-head">
+        <nav class="nav-menu">
+            <div class="pillgroup1">
+                <span class="category-label">Dashboards</span>
+                <a href="{{ route('dashboard.hr') }}" class="nav-link"><img src="{{ asset('images/analytics-icon.png') }}" class="nav-icon"> Overview</a>
+                <a href="{{ route('impact.analytics') }}" class="nav-link"><img src="{{ asset('images/Impact-icon.png') }}" class="nav-icon" id="impact-icon"> Impact</a>
+                <a href="{{ route('retention.metrics') }}" class="nav-link"><img src="{{ asset('images/retention-icon1.png') }}" class="nav-icon" id="retention-icon"> Retention</a>
+                <a href="{{ route('department.analysis') }}" class="nav-link active"><img src="{{ asset('images/department-icon.png') }}" class="nav-icon"> Departmental</a>
             </div>
-        <header class="nav-head">
-            <!--first category at the top of the page-->
-            <!--navigation links-->
-            <nav class="nav-menu">
-                <div class="pillgroup1">
-                    <span class="category-label">Dashboards</span> 
+            <a href="{{ route('attendees.index') }}" class="nav-link"><img src="{{ asset('images/attendance-icon.png') }}" class="nav-icon"> Attendees</a>
+            <a href="{{ route('events.management') }}" class="nav-link"><img src="{{ asset('images/events-icon.png') }}" class="nav-icon"> Events</a>
+            <a href="{{ route('settings.edit') }}" class="nav-link"><img src="{{ asset('images/settings-icon.png') }}" class="nav-icon"> Settings</a>
+        </nav>
+    </header>
 
-                    <a href="{{ route('dashboard.hr') }}" class="nav-link"> 
-                        <img src="/images/analytics-icon.png" alt="analytics icon" class="nav-icon"> Overview
-                    </a> 
+    <h1>Departmental Engagement Growth</h1>
+    <p style="padding:0 4%; color:#6b7280; font-size:14px;">Analysis of departments across the semester.</p>
 
-                    <a href="{{ route('impact.analytics') }}" class="nav-link">
-                        <img src="/images/Impact-icon.png" alt="impact icon" class="nav-icon" id="impact-icon">Impact
-                    </a> 
+    <p class="section-title">OVERVIEW</p>
+    <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Departments Tracked</div><div class="kpi-value">{{ count($ranking['all_departments']) }}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Org-Wide Average Rate</div><div class="kpi-value">{{ count($ranking['all_departments']) ? round(collect($ranking['all_departments'])->avg('engagement_rate'), 1) : 0 }}%</div></div>
+        <div class="kpi-card"><div class="kpi-label">Engaged Departments</div><div class="kpi-value">{{ collect($ranking['all_departments'])->where('status', 'engaged')->count() }}</div></div>
+    </div>
 
-                    <a href="{{ route('retention.metrics') }}" class="nav-link">
-                       <img src="/images/retention-icon1.png" alt="retention icon" class="nav-icon" id="retention-icon"> Retention
-                    </a>
+    <div class="two-col">
+        <div class="col-card">
+            <h3>Most Active — Top 5</h3>
+            @forelse($ranking['most_active'] as $d)
+                <div class="dept-row"><span class="dept-name">{{ $d['department'] }}</span><span class="dept-rate">{{ $d['engagement_rate'] }}%</span></div>
+            @empty
+                <p style="color:#888;font-size:13px;">No data yet.</p>
+            @endforelse
+        </div>
+        <div class="col-card">
+            <h3>Needs Attention — Bottom 5</h3>
+            @forelse($ranking['needs_attention'] as $d)
+                <div class="dept-row"><span class="dept-name">{{ $d['department'] }}</span><span class="dept-rate">{{ $d['engagement_rate'] }}%</span></div>
+            @empty
+                <p style="color:#888;font-size:13px;">No data yet.</p>
+            @endforelse
+        </div>
+    </div>
 
-                    <a href="{{ route('department.analysis') }}" class="nav-link active">
-                        <img src="/images/department-icon.png" alt="department icon" class="nav-icon">Departmental
-                    </a>
-                </div>
-                
-                <!--second category at the top of the page-->
-                <a href="{{ route('attendees.index') }}" class="nav-link">
-                    <img src="/images/attendance-icon.png" alt="attendees icon" class="nav-icon">Attendees
-                </a> 
+    <p class="section-title">RANKED TABLE</p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>#</th><th>Department</th><th>Code</th><th>Staff</th><th>Attendees</th><th>Rate</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach($ranking['all_departments'] as $i => $d)
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+                        <td><strong>{{ $d['department'] }}</strong></td>
+                        <td>{{ $d['code'] }}</td>
+                        <td>{{ $d['total_staff'] }}</td>
+                        <td>{{ $d['unique_attendees'] }}</td>
+                        <td><strong>{{ $d['engagement_rate'] }}%</strong></td>
+                        <td>
+                            @php $cls = $d['status'] === 'engaged' ? 'pill-engaged' : ($d['status'] === 'developing' ? 'pill-developing' : 'pill-disengaged'); @endphp
+                            <span class="{{ $cls }}">{{ $d['status'] }}</span>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 
-                <a href="{{ route('events.management') }}" class="nav-link">
-                    <img src="/images/events-icon.png" alt="events icon" class="nav-icon"> Events
-                </a> 
-
-                <a href="{{ route('settings.edit') }}" class="nav-link">
-                    <img src="/images/settings-icon.png" alt="settings icon" class="nav-icon">Settings
-                </a>
-            </nav>
-        </header>
-
-        <main>
-            <!--Title-->
-            <h1>Departmental Engagement Growth</h1>
-
-            <p class="caption">Analysis of departments across the acedemic year.</p>
-            
-            <h2 class="split-row">OVERVIEW</h2>
-                
-                <div class="dashboard-row dept">
-
-                    <!-- CARD 1: Departments Tracked -->
-                    <div class="container metric-card">
-                        <div class="card-header-line">
-                            <span class="card-label">DEPARTMENTS TRACKED</span>
-                        </div>
-                        <div class="metric-value text-blue">%</div>
-                    </div>
-
-                    <!-- CARD 2: Engaged Departments -->
-                    <div class="container metric-card">
-                        <div class="card-header-line">
-                            <span class="card-label">ENGAGED DEPARTMENTS</span>
-                        </div>
-                        <div class="metric-value text-blue">%</div>
-                    </div>
-
-                </div>
-
-                <!-- wrapping dashboard layout 2 -->
-                <div class="dashboard-row dept">
-
-                    <!-- CARD 1: most active -->
-                    <div class="container dept-card">
-                        <div class="card-header">
-                            <span class="card-label">MOST ACTIVE — TOP 5</span>
-                        </div>
-                        
-                        <!-- Row List Wrapper: Contains the list elements -->
-                        <div class="dept-list-wrapper">
-                            <!-- Individual List Row Item -->
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CARD 2: least active -->
-                    <div class="container dept-card">
-                        <div class="card-header">
-                            <span class="card-label">LEAST ACTIVE — BOTTOM 5</span>
-                        </div>
-                        
-                        <!-- Row List Wrapper: Contains the list elements -->
-                        <div class="dept-list-wrapper">
-                            <!-- Individual List Row Item -->
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-
-                            <div class="dept-list-item">
-                                <span class="dept-item-name">help desk</span>
-                                <span class="dept-item-value">0%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-            <h2 class="split-row">RANKED TABLE</h2>
-
-                <div class="table-container2">
-                        <table>
-                            <!--row 1-->
-                            <thead>
-                                <tr>
-                                    <th scope="col">Number(#)</th>
-                                    <th scope="col">Department</th>
-                                    <th scope="col">Staff</th>
-                                    <th scope="col">participant number</th>
-                                    <th scope="col">Participation Rate</th>
-                                    <th scope="col">Engagement status</th>
-                                </tr>
-                            </thead>
-                            
-                            <tbody>
-                        
-                            <!--row 2-->
-                                <tr>
-                                    <!-- number column -->
-                                    <td class="name-column">1</td>
-                                    <!-- department column -->
-                                    <td class="department-column">help desk</td>
-                                    
-                                    <!-- number column -->
-                                    <td class="name-column">1</td>
-                                    <!-- department column -->
-                                    <td class="department-column">help desk</td>
-                                    
-                                    <!-- number column -->
-                                    <td class="name-column">1</td>
-                                    <!-- department column -->
-                                    <td class="department-column">help desk</td>
-                                    
-                                </tr>
-                            <!--row 2-->
-                                <tr>
-                                    <!-- number column -->
-                                    <td class="name-column">1</td>
-                                    <!-- department column -->
-                                    <td class="department-column">help desk</td>
-                                    
-                                    <!-- number column -->
-                                    <td class="name-column">1</td>
-                                    <!-- department column -->
-                                    <td class="department-column">help desk</td>
-                                    
-                                    <!-- number column -->
-                                    <td class="name-column">1</td>
-                                    <!-- department column -->
-                                    <td class="department-column">help desk</td>
-                                    
-                                </tr>
-                            
-                             
-                            
-                            <!-- <tr>
-                                <td colspan="9">No registrations found.</td>
-                            </tr> -->
-                            
-
-                            </tbody>
-                        </table>
-                    </div>
-
-                <button type="submit" id="export">Export Report (csv)</button>
-        </main>
-    </body>
+    <a href="{{ route('reports.departmental.export') }}" class="export-btn">⬇ Export Report (CSV)</a>
+</body>
 </html>

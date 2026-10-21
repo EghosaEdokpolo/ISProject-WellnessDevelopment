@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
 use App\Models\WellbeingResponse;
+use App\Models\Feedback;
 use App\Services\DepartmentalEngagementService;
 use App\Services\RetentionService;
 use App\Services\WellnessImpactService;
@@ -55,6 +56,20 @@ class DashboardController extends Controller
                 return ['text' => "<strong>{$reg->user->name}</strong> registered for <strong>{$reg->event->name}</strong>", 'time' => $reg->updated_at->diffForHumans(), 'marker' => 'marker-gold'];
             });
 
+        // NEW STAKEHOLDER FEEDBACK METRICS:
+        $mostAttendedEvent = Registration::with('event')
+            ->selectRaw('event_id, count(*) as total')
+            ->groupBy('event_id')
+            ->orderByDesc('total')
+            ->first();
+
+        $qualitativeFeedback = Feedback::with(['registration.user', 'registration.event'])
+            ->whereNotNull('comments')
+            ->where('comments', '!=', '')
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('hrview.hrdb_overview', [
             'registrationRate' => $totalStaff ? round($registeredStaff / $totalStaff * 100, 1) : 0,
             'sustainedParticipationRate' => $totalStaff ? round($sustainedStaffCount / $totalStaff * 100, 1) : 0,
@@ -68,6 +83,8 @@ class DashboardController extends Controller
             'socialCount' => $socialCount,
             'eventsThisSemester' => $eventsThisAcademicYear,
             'recentActivities' => $recentActivities,
+            'mostAttendedEvent' => $mostAttendedEvent,
+            'qualitativeFeedback' => $qualitativeFeedback,
         ]);
     }
 
@@ -93,10 +110,24 @@ class DashboardController extends Controller
     public function impactAnalytics(WellnessImpactService $service): View
     {
         $category = request('category');
+        $categoriesData = $service->categoryBreakdown($category);
+        
+        // NEW: Find highest and lowest dimensions
+        $highestDim = null;
+        $lowestDim = null;
+        
+        if ($category === null) {
+            $sorted = collect($categoriesData)->sortByDesc('avg_lift');
+            $highestDim = $sorted->keys()->first();
+            $lowestDim = $sorted->keys()->last();
+        }
+
         return view('hrview.hrdb_impact', [
-            'categories' => $service->categoryBreakdown($category),
+            'categories' => $categoriesData,
             'eventTable' => $service->eventTable($category),
             'activeCategory' => $category,
+            'highestDim' => $highestDim,
+            'lowestDim' => $lowestDim,
         ]);
     }
 

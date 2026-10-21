@@ -1,97 +1,89 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1 class="text-2xl font-bold text-gray-900">Upcoming Wellness Events</h1>
-    <p class="text-sm text-gray-500 mt-1 mb-6">
-        4 of 8 SAMHSA wellness dimensions covered in v1 (Physical, Mental, Financial, Social).
-    </p>
+    <div class="flex justify-between items-end mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Upcoming Wellness Events</h1>
+            <p class="text-sm text-gray-500 mt-1">4 of 8 SAMHSA wellness dimensions covered in v1.</p>
+        </div>
+    </div>
 
-    {{-- POINTER: each pill is just a link to the same route with a different
-         ?category= value. request()->query('category') isn't set, so
-         "All" is active whenever no filter is applied. Comparing
-         $activeCategory (passed from the controller) against each pill's
-         value drives the highlight — same pattern as the radio-pill trick
-         in events/create.blade.php, but with real links instead of inputs. --}}
-    <div class="flex gap-2 mb-6">
-        <a href="{{ route('events.index') }}"
-           class="px-4 py-1.5 rounded-lg text-sm font-medium {{ !$activeCategory ? 'bg-wl-indigo text-white' : 'bg-white text-gray-600 border border-gray-200' }}">
-            All
-        </a>
+    <!-- Category Filters -->
+    <div class="flex gap-2 mb-8 bg-white p-1.5 rounded-xl border border-gray-100 shadow-sm w-fit">
+        <a href="{{ route('events.index') }}" class="px-5 py-2 rounded-lg text-sm font-semibold {{ !$activeCategory ? 'bg-wl-indigo text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50' }}">All</a>
         @foreach(['physical' => 'Physical', 'mental' => 'Mental', 'financial' => 'Financial', 'social' => 'Social'] as $value => $label)
-            <a href="{{ route('events.index', ['category' => $value]) }}"
-               class="px-4 py-1.5 rounded-lg text-sm font-medium {{ $activeCategory === $value ? 'bg-wl-indigo text-white' : 'bg-white text-gray-600 border border-gray-200' }}">
+            <a href="{{ route('events.index', ['category' => $value]) }}" class="px-5 py-2 rounded-lg text-sm font-semibold {{ $activeCategory === $value ? 'bg-wl-indigo text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50' }}">
                 {{ $label }}
             </a>
         @endforeach
     </div>
 
-    @if($activeCategory && $events->isEmpty())
-        <p class="text-sm text-gray-500 bg-white rounded-lg p-4">No upcoming {{ $activeCategory }} events right now — check back soon.</p>
-    @endif
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {{-- POINTER: @foreach loops over the $events collection the
-             EventController passed in via compact('events'). Every {{ }}
-             below is Blade's escaped-output syntax — it auto-escapes HTML,
-             which is what keeps user-submitted event names from being able
-             to inject scripts (a basic but important security habit). --}}
-        @foreach($events as $event)
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="h-16 {{ $event->category_color }} flex items-end px-4 pb-2">
-                    <span class="text-xs font-semibold uppercase">{{ $event->category }}</span>
-                </div>
-                <div class="p-4">
-                    <h3 class="font-semibold text-gray-900">{{ $event->name }}</h3>
-                    <p class="text-xs text-gray-500 mt-1">
-                        {{ $event->starts_at->format('D, d M Y') }} · {{ $event->location }}
-                    </p>
-
-                    <div class="flex items-center justify-between mt-4">
-                        <span class="text-xs {{ $event->spots_remaining <= 10 ? 'text-red-600' : 'text-gray-500' }}">
-                            @if($event->spots_remaining <= 10) ⚠ @endif
-                            {{ $event->spots_remaining }} spots remaining
-                        </span>
-
-                        @if(auth()->user()->isStaff())
-                            <form method="POST" action="{{ route('registrations.store', $event) }}">
-                                @csrf {{-- POINTER: every POST form in Laravel needs this —
-                                           it's Laravel's CSRF protection token, checked
-                                           automatically by middleware. Forget it and the
-                                           form submission is rejected with a 419 error. --}}
-                                <button class="bg-wl-gold text-wl-navy text-sm font-semibold px-4 py-1.5 rounded-md">
-                                    Register
-                                </button>
-                            </form>
-                        @endif
+    <!-- Events Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @forelse($events as $event)
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                <!-- Category Color Bar -->
+                <div class="h-2 {{ $event->category_color }}"></div>
+                
+                <div class="p-6 flex flex-col flex-1">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full {{ $event->category_color }}">{{ $event->category }}</span>
+                        <span class="text-xs font-semibold text-gray-400">{{ $event->spots_remaining }} spots left</span>
                     </div>
+                    
+                    <h3 class="font-bold text-lg text-gray-900 mb-2 leading-tight">{{ $event->name }}</h3>
+                    <p class="text-sm text-gray-500 mb-6">{{ $event->description }}</p>
+
+                    <div class="space-y-2 mb-6 mt-auto">
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            {{ $event->starts_at->format('l, d M Y \a\t H:i') }}
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            {{ $event->location }}
+                        </div>
+                    </div>
+
+                    @php
+                        $isRegistered = $event->registrations->where('user_id', auth()->id())->first();
+                    @endphp
+
+                    @if($isRegistered)
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center mb-3">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">You are registered</span>
+                            
+                            <!-- Google Calendar Link -->
+                            <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ urlencode($event->name) }}&dates={{ $event->starts_at->format('Ymd\THis') }}/{{ $event->starts_at->copy()->addHours(2)->format('Ymd\THis') }}&details={{ urlencode($event->description) }}&location={{ urlencode($event->location) }}" target="_blank" class="block w-full bg-white border border-gray-300 text-gray-700 font-semibold py-2 rounded-lg mb-2 hover:bg-gray-50 transition-colors text-sm">
+                                <span class="flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Add to Calendar
+                                </span>
+                            </a>
+
+                            <!-- Dynamic WhatsApp Link -->
+                            @if(env('STRATHMORE_WHATSAPP_LINK'))
+                                <a href="{{ env('STRATHMORE_WHATSAPP_LINK') }}" target="_blank" class="block w-full bg-[#25D366] text-white font-semibold py-2 rounded-lg hover:bg-[#128C7E] transition-colors text-sm mb-2">
+                                    Join WhatsApp for Info
+                                </a>
+                            @endif
+
+                            <a href="{{ route('registrations.waiver', $isRegistered) }}" class="text-sm text-wl-indigo font-bold hover:underline block mt-3">Go to Waiver & Check-in &rarr;</a>
+                        </div>
+                    @else
+                        <form method="POST" action="{{ route('registrations.store', $event) }}">
+                            @csrf
+                            <button class="w-full bg-wl-navy text-white text-sm font-bold py-3 rounded-xl hover:bg-gray-800 transition-colors">
+                                Register for Event
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
-        @endforeach
+        @empty
+            <div class="col-span-full py-12 text-center text-gray-500">
+                No upcoming events right now. Check back soon!
+            </div>
+        @endforelse
     </div>
-
-    {{-- POINTER: a separate loop over $pastEvents (also passed from the
-         controller). Same card markup, but no <form>/Register button —
-         staff can look back at what they've done, they just can't
-         re-register for something that already happened. --}}
-    @if($pastEvents->isNotEmpty())
-        <h2 class="text-lg font-bold text-gray-900 mt-10 mb-4">Past Events</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            @foreach($pastEvents as $event)
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden opacity-75">
-                    <div class="h-16 {{ $event->category_color }} flex items-end px-4 pb-2">
-                        <span class="text-xs font-semibold uppercase">{{ $event->category }}</span>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-gray-900">{{ $event->name }}</h3>
-                        <p class="text-xs text-gray-500 mt-1">
-                            {{ $event->starts_at->format('D, d M Y') }} · {{ $event->location }}
-                        </p>
-                        <span class="inline-block mt-4 text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full">
-                            {{ $event->registrations_count }} attended
-                        </span>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    @endif
 @endsection

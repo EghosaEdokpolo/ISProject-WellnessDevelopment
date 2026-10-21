@@ -3,23 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\EventQrToken;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class QrCodeController extends Controller
 {
     public function __invoke(Request $request, Event $event)
     {
-        $token = EventQrToken::create([
-            'event_id' => $event->id,
-            'token' => Str::random(64),
-            'expires_at' => $event->starts_at->copy()->addDay(),
-        ]);
+        // This generates a URL like: https://yourdomain.com/checkin/event/1
+        // When staff scan this, it opens on their phone.
+        $url = url("/checkin/event/{$event->id}");
 
-        $url = url("/check-in/{$event->id}?token={$token->token}");
-        $svg = QrCode::format('svg')->size(400)->generate($url);
+        // Generate the SVG (high quality for printing)
+        $svg = QrCode::format('svg')->size(500)->margin(2)->generate($url);
 
         return response($svg, 200)->header('Content-Type', 'image/svg+xml');
     }

@@ -8,6 +8,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\Reports\DepartmentalExportController;
+use App\Http\Controllers\Reports\PdfExportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,12 +27,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/events/{event}/register', [RegistrationController::class, 'store'])->name('registrations.store');
     Route::get('/registrations/{registration}/waiver', [RegistrationController::class, 'waiverForm'])->name('registrations.waiver');
     Route::post('/registrations/{registration}/waiver', [RegistrationController::class, 'waiverStore'])->name('registrations.waiver.store');
-    Route::get('/registrations/{registration}/checkin', [CheckInController::class, 'show'])->name('checkin.show');
-    Route::get('/checkin/confirm/{registration}', [CheckInController::class, 'confirm'])->name('checkin.confirm')->middleware('signed');
-    Route::post('/checkin/manual', [CheckInController::class, 'manual'])->name('checkin.manual');
+    
+    Route::get('/checkin', [CheckInController::class, 'index'])->name('checkin.index');
+    Route::get('/checkin/event/{event}', [CheckInController::class, 'scan'])->name('checkin.scan');
+    Route::get('/checkin/{registration}', [CheckInController::class, 'show'])->name('checkin.show');
+    Route::post('/checkin/{registration}/confirm', [CheckInController::class, 'confirm'])->name('checkin.confirm');
+    
+    Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
     Route::get('/registrations/{registration}/feedback', [FeedbackController::class, 'create'])->name('feedback.create');
     Route::post('/registrations/{registration}/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
+    
     Route::get('/rewards', [DashboardController::class, 'rewards'])->name('rewards.index');
+    Route::get('/content', function () { return view('content.index'); })->name('content.index');
 
     // HR routes
     Route::middleware('hr')->group(function () {
@@ -44,14 +51,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.edit');
         Route::post('/settings', [DashboardController::class, 'updateSettings'])->name('settings.update');
 
-        // Event actions
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
         Route::post('/events', [EventController::class, 'store'])->name('events.store');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-        
-        // Advanced features
         Route::get('/events/{event}/qr', QrCodeController::class)->name('events.qr');
+        
+        // Export Routes
         Route::get('/reports/departmental-export', DepartmentalExportController::class)->name('reports.departmental.export');
+        Route::get('/reports/pdf-export', PdfExportController::class)->name('reports.pdf.export');
+        
         Route::post('/communications/send', [CommunicationController::class, 'send'])->name('communications.send');
     });
 });

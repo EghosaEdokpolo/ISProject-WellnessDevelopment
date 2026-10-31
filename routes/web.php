@@ -61,6 +61,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/pdf-export', PdfExportController::class)->name('reports.pdf.export');
         
         Route::post('/communications/send', [CommunicationController::class, 'send'])->name('communications.send');
+    
+        //feedback routes
+        Route::get('/hr/feedback-logs', [DashboardController::class, 'feedbackLogs'])->name('hr.feedback.logs');
+
     });
 });
 

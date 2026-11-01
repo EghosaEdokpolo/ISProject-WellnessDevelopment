@@ -10,6 +10,8 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\Reports\DepartmentalExportController;
 use App\Http\Controllers\Reports\PdfExportController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HrImpactController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -43,7 +45,7 @@ Route::middleware('auth')->group(function () {
     // HR routes
     Route::middleware('hr')->group(function () {
         Route::get('/hr/overview', [DashboardController::class, 'hrOverview'])->name('dashboard.hr');
-        Route::get('/impact-analytics', [DashboardController::class, 'impactAnalytics'])->name('impact.analytics');
+        Route::get('/impact-analytics', [HrImpactController::class, 'index'])->name('impact.analytics');
         Route::get('/retention-metrics', [DashboardController::class, 'retentionMetrics'])->name('retention.metrics');
         Route::get('/department-analysis', [DashboardController::class, 'departmentAnalysis'])->name('department.analysis');
         Route::get('/attendees', [DashboardController::class, 'attendees'])->name('attendees.index');
@@ -51,6 +53,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.edit');
         Route::post('/settings', [DashboardController::class, 'updateSettings'])->name('settings.update');
 
+
+        
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
         Route::post('/events', [EventController::class, 'store'])->name('events.store');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
@@ -64,7 +68,7 @@ Route::middleware('auth')->group(function () {
     
         //feedback routes
         Route::get('/hr/feedback-logs', [DashboardController::class, 'feedbackLogs'])->name('hr.feedback.logs');
-
+        
     });
 });
 

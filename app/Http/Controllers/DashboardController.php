@@ -180,29 +180,6 @@ class DashboardController extends Controller
         return view('hrview.hrdb_eventsmanagement', compact('events'));
     }
 
-    public function impactAnalytics(WellnessImpactService $service): View
-    {
-        $category = request('category');
-        $categoriesData = $service->categoryBreakdown($category);
-        
-        // NEW: Find highest and lowest dimensions
-        $highestDim = null;
-        $lowestDim = null;
-        
-        if ($category === null) {
-            $sorted = collect($categoriesData)->sortByDesc('avg_lift');
-            $highestDim = $sorted->keys()->first();
-            $lowestDim = $sorted->keys()->last();
-        }
-
-        return view('hrview.hrdb_impact', [
-            'categories' => $categoriesData,
-            'eventTable' => $service->eventTable($category),
-            'activeCategory' => $category,
-            'highestDim' => $highestDim,
-            'lowestDim' => $lowestDim,
-        ]);
-    }
 
     public function retentionMetrics(RetentionService $service): View
     {

@@ -5,21 +5,9 @@
     <title>Departmental Engagement Growth</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
-    @vite(['resources/css/hr_view_style.css', 'resources/js/app.js'])
+    @vite(['resources/css/hr_view_style.css', 'resources/css/HR_departmental.css', 'resources/js/app.js'])
     <style>
-        body { background: #f5f4f0; font-family: 'Lato', sans-serif; }
-        .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 0 4% 20px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
-        .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.5px; }
-        .metric-value { font-size: 32px; font-weight: 800; color: #02338d; margin: 10px 0 4px; }
-        .metric-sub { font-size: 12px; color: #9ca3af; }
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 4% 40px; }
-        .list-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
-        .list-item:last-child { border-bottom: none; }
-        .data-table { width:100%; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-collapse:collapse; }
-        .data-table th { background:#02338d; color:#fff; padding:12px; text-align:left; font-size:12px; font-weight:600; }
-        .data-table td { padding:12px; border-bottom:1px solid #eee; font-size:13px; color:#374151; }
-        .export-btn { display:inline-block; padding:10px 22px; background:#cca04a; color:#000; border-radius:8px; text-decoration:none; font-weight:700; font-size:13px; border: none; cursor: pointer;}
+        
     </style>
 </head>
 <body>
@@ -41,11 +29,31 @@
         <p style="margin-top:0; color:#6b7280; font-size:14px;">Which departments moved from disengaged to engaged across the semester.</p>
     </div>
 
+    <!-- DYNAMIC METRIC CARDS WITH ACADEMIC YEAR LABELS -->
     <div class="kpi-grid-4">
-        <div class="card"><div class="card-label">DEPARTMENTS TRACKED</div><div class="metric-value" style="color:#02338d;">{{ count($ranking['all_departments']) }}</div><div class="metric-sub">of 47 total</div></div>
-        <div class="card"><div class="card-label">ORG AVG — SEMESTER START</div><div class="metric-value" style="color:#b91c1c;">30%</div><div class="metric-sub">engagement rate</div></div>
-        <div class="card"><div class="card-label">ORG AVG — SEMESTER END</div><div class="metric-value" style="color:#0a7b2b;">60%</div><div class="metric-sub">engagement rate</div></div>
-        <div class="card"><div class="card-label">ORG-WIDE GROWTH</div><div class="metric-value" style="color:#cca04a;">+30pp</div><div class="metric-sub">percentage points</div></div>
+        <div class="card">
+            <div class="card-label">DEPARTMENTS TRACKED</div>
+            <div id="metric-tracked" class="metric-value" style="color:#02338d;">{{ count($ranking['all_departments']) }}</div>
+            <div class="metric-sub">of 47 total</div>
+        </div>
+        
+        <div class="card">
+            <div class="card-label">ORG AVG — ACADEMIC YEAR START</div>
+            <div id="metric-start" class="metric-value" style="color:#b91c1c;">{{ $ranking['org_start'] ?? '0%' }}</div>
+            <div class="metric-sub">engagement rate</div>
+        </div>
+        
+        <div class="card">
+            <div class="card-label">ORG AVG — ACADEMIC YEAR END</div>
+            <div id="metric-end" class="metric-value" style="color:#0a7b2b;">{{ $ranking['org_end'] ?? '0%' }}</div>
+            <div class="metric-sub">engagement rate</div>
+        </div>
+        
+        <div class="card">
+            <div class="card-label">ORG-WIDE GROWTH</div>
+            <div id="metric-growth" class="metric-value" style="color:#cca04a;">{{ $ranking['org_growth'] ?? '+30pp' }}</div>
+            <div class="metric-sub">percentage points</div>
+        </div>
     </div>
 
     <div class="two-col">
@@ -69,7 +77,6 @@
 
     <div style="padding: 0 4% 20px; display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex; gap:10px;">
-            <button style="padding:8px 16px; border-radius:6px; border:none; background:#02338d; color:#fff; font-weight:600; font-size:12px;">Engagement Heatmap</button>
             <button style="padding:8px 16px; border-radius:6px; border:1px solid #d1d5db; background:#fff; color:#4b5563; font-weight:600; font-size:12px;">Ranked Table</button>
         </div>
 
@@ -82,7 +89,17 @@
 
     <div style="padding: 0 4% 40px;">
         <table class="data-table">
-            <thead><tr><th>#</th><th>Department</th><th>Code</th><th>Staff</th><th>Attendees</th><th>Rate</th><th>Status</th></tr></thead>
+            <thead style="justify-content: flex-end;">
+                <tr>
+                    <th>#</th>
+                    <th>Department</th>
+                    <th>Code</th>
+                    <th>Staff</th>
+                    <th>Attendees</th>
+                    <th>Rate</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
             <tbody>
                 @foreach($ranking['all_departments'] as $i => $d)
                     <tr>

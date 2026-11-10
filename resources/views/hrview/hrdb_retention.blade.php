@@ -63,7 +63,8 @@
             
             <!-- 1. Left Card: The Departmental Drop-Off  Matrix) -->
             <div class="card" style="background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); height: 350px; display: flex; flex-direction: column;">
-                <div class="card-label" style="margin-bottom: 15px; font-weight: bold; color: #4b5563;">📊 Departmental Drop-Off Matrix</div>
+                <div class="card-label" style="margin-bottom: 15px; font-weight: bold; color: #4b5563; font-size: 15px;">📊 Departmental Drop-Off Matrix</div>
+                <span style="margin-bottom: 7px; font-size: 13px;">100-60% - 🟢 . 59-30% - 🟡 . 29-0% - 🔴</span>
                 
                 <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
                     <table class="heatmap-table">
@@ -79,10 +80,25 @@
                         <tbody>
                             @foreach($retention['heatmap_data'] as $row)
                                 <tr>
+                                    <!-- Department Column -->
                                     <td><strong>{{ $row['department'] }}</strong></td>
-                                    <td class="heat-high">{{ $row['q1'] }}%</td>
-                                    <td class="{{ $row['q2'] >= 60 ? 'heat-high' : 'heat-medium' }}">{{ $row['q2'] }}%</td>
-                                    <td class="{{ $row['q3'] >= 60 ? 'heat-high' : ($row['q3'] >= 30 ? 'heat-medium' : 'heat-low') }}">{{ $row['q3'] }}%</td>
+                                    
+                                    <!-- Q1 Column  -->
+                                    <td class="{{ $row['q1'] >= 60 ? 'heat-high' : ($row['q1'] >= 30 ? 'heat-medium' : 'heat-low') }}">
+                                        {{ $row['q1'] }}%
+                                    </td>
+                                    
+                                    <!-- Q2 Column: Dynamic Color Mapping -->
+                                    <td class="{{ $row['q2'] >= 60 ? 'heat-high' : ($row['q2'] >= 30 ? 'heat-medium' : 'heat-low') }}">
+                                        {{ $row['q2'] }}%
+                                    </td>
+                                    
+                                    <!-- Q3 Column: Dynamic Color Mapping -->
+                                    <td class="{{ $row['q3'] >= 60 ? 'heat-high' : ($row['q3'] >= 30 ? 'heat-medium' : 'heat-low') }}">
+                                        {{ $row['q3'] }}%
+                                    </td>
+                                    
+                                    <!-- Status Pill Column -->
                                     <td>
                                         <span class="status-pill {{ $row['q3'] >= 50 ? 'status-stable' : 'status-drop' }}">
                                             {{ $row['q3'] >= 50 ? 'Stable' : 'Critical Drop' }}
@@ -91,13 +107,14 @@
                                 </tr>
                             @endforeach
                         </tbody>
+
                     </table>
                 </div>
             </div>
 
             <!-- 2. Right Card: Attendance Loyalty Frequency Distribution (SET TO MATCHING 350PX HEIGHT) -->
             <div class="card" style="background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); height: 350px;">
-                <div class="card-label" style="margin-bottom: 15px; font-weight: bold; color: #4b5563;">⏱️ Attendance Loyalty Frequency Distribution</div>
+                <div class="card-label" style="margin-bottom: 15px; font-weight: bold; color: #4b5563; font-size: 15px;">⏱️ Attendance Loyalty Frequency Distribution</div>
                 
                 <div style="height: 270px; position: relative; width: 100%;">
                     <canvas id="loyaltyDistributionChart"
@@ -113,7 +130,7 @@
         <!-- GRANULAR INDIVIDUAL LOYALTY SCORES DATA TABLE PLACED INSIDE A CARD WITH ROUNDED CORNERS -->
         <div style="padding: 0 4% 40px;">
             <div class="card" style="padding: 20px 0 0; border-radius: 12px; overflow: hidden; background: white;">
-                <div class="card-label" style="padding-left: 20px; margin-bottom: 15px;">👤 Individual Staff Loyalty Scores</div>
+                <div class="card-label" style="padding-left: 20px; margin-bottom: 15px; font-size: 20px;">👤 Individual Staff Loyalty Scores</div>
                 <table class="data-table">
                     <thead>
                         <tr>

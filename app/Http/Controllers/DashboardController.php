@@ -191,10 +191,10 @@ class DashboardController extends Controller
         return view('hrview.hrdb_departmental', ['ranking' => $service->ranking()]);
     }
 
-    public function settings()
-    {
-        return view('hrview.hrdb_settings', ['user' => auth()->user()]);
-    }
+    // public function settings()
+    // {
+    //     return view('hrview.hrdb_settings', ['user' => auth()->user()]);
+    // }
 
     public function updateSettings(Request $request)
     {

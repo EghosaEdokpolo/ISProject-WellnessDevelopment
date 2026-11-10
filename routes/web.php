@@ -9,8 +9,9 @@ use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\Reports\DepartmentalExportController;
 use App\Http\Controllers\Reports\PdfExportController;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Route; 
 use App\Http\Controllers\HrImpactController;
+use App\Http\Controllers\HrSettingsController;
 
 
 Route::get('/', function () {
@@ -50,9 +51,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/department-analysis', [DashboardController::class, 'departmentAnalysis'])->name('department.analysis');
         Route::get('/attendees', [DashboardController::class, 'attendees'])->name('attendees.index');
         Route::get('/events-management', [DashboardController::class, 'eventmanagement'])->name('events.management');
-        Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.edit');
+        
+        //settings routes
+        //Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.edit');
         Route::post('/settings', [DashboardController::class, 'updateSettings'])->name('settings.update');
 
+        // This maps /hr/settings to our new single-purpose controller while preserving your link name!
+        Route::get('/settings', [HrSettingsController::class, 'index'])->name('settings.edit');
+            
+        // Route to handle the points reset button action
+            Route::post('/points/reset', [HrSettingsController::class, 'resetPoints']);
+
+            // Let AuthenticatedSessionController destroy the login session
+            Route::post('/auth/logout', [AuthenticatedSessionController::class, 'destroy'])
+                ->name('logout');
 
         
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');

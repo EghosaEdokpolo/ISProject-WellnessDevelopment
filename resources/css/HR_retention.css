@@ -1,0 +1,167 @@
+.big-kpi { 
+    margin:20px 4%; 
+    background:linear-gradient(135deg,#02338d,#0a56c4); 
+    color:#fff; 
+    padding:40px; 
+    border-radius:20px; 
+    text-align:center; 
+}
+
+.big-kpi .number { 
+    font-size:72px; 
+    font-weight:800; 
+    line-height:1; 
+}
+
+.big-kpi .label { 
+    font-size:16px; 
+    opacity:0.9; 
+    margin-top:10px; 
+}
+
+.big-kpi .sub { 
+    font-size:13px; 
+    opacity:0.75; 
+    margin-top:6px; 
+}
+
+.sub-kpis { 
+    display:grid; 
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); 
+    gap:16px; 
+    padding:0 4% 40px; 
+}
+
+.sub-kpi { 
+    background:#fff; 
+    padding:20px; 
+    border-radius:14px; 
+    box-shadow:0 2px 8px rgba(0,0,0,0.08); 
+}
+
+.sub-kpi .num { 
+    font-size:32px; 
+    font-weight:700; 
+    color:#02338d; 
+}
+
+.sub-kpi .lab { 
+    color:#6a7e9a; 
+    font-size:13px; 
+    text-transform:uppercase; 
+    letter-spacing:0.5px; 
+}
+
+/* Core tables layout normalization */
+.data-table { 
+    width: 100%; border-collapse: collapse; margin-top: 10px; font-family: 'Lato', sans-serif; }
+.data-table th { background-color: #02338d; color: white; padding: 12px; font-weight: 600; text-align: center; font-size: 13px; }
+.data-table td { padding: 14px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 13px; color: #374151; }
+.text-left { text-align: left; padding-left: 20px; }
+
+/* Dynamic Horizontal visual progress container tracker */
+.loyalty-track-bar { 
+    width: 120px; 
+    height: 8px; 
+    background-color: #e5e7eb; 
+    border-radius: 10px; 
+    display: inline-block; 
+    overflow: hidden; 
+    vertical-align: middle; 
+    margin-right: 10px; 
+}
+.loyalty-fill-progress { height: 100%; border-radius: 10px; transition: width 0.4s ease; }
+
+/* Loyalty pill status layout badges */
+.loyalty-badge { 
+    padding: 4px 12px; 
+    border-radius: 20px; 
+    font-size: 11px; 
+    font-weight: 700; 
+    display: inline-block;
+    min-width: 45px;
+    text-align: center;
+    /* Clip table container overflow corners cleanly */
+
+}
+
+.card { 
+    border-radius: 12px !important; 
+}
+
+.data-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    border-radius: 12px !important; 
+    overflow: hidden; 
+}
+
+/* Expand chart visibility columns proportions spacing */
+.charts-grid-row { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; /* Retains balanced width anchors */
+    gap: 24px; 
+    padding: 0 4% 30px; 
+    align-items: start; /* CRITICAL: Prevents stretching cards to match height unevenly */
+}
+
+/*  Clear out header color overlapping mask issues */
+.heatmap-table th { 
+    color: #4b5563; 
+    padding: 14px 10px; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    font-size: 11px; 
+    letter-spacing: 0.6px; 
+    text-align: center; 
+    border-bottom: 2px solid #e5e7eb; 
+    background: transparent !important; /* Forces the default dark blue row fill to drop away completely */
+}
+
+/* Give rows better clean breathing padding lines space borders */
+.heatmap-table td { 
+    padding: 16px 12px; 
+    text-align: center; 
+    font-weight: 700; 
+}
+
+.heatmap-table tbody tr { 
+    background: #ffffff; /* Crisp corporate standard bright card look layout */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+
+.heatmap-table tbody tr:hover { 
+    background: #f3f4f6; 
+}
+
+/* Smooth rounded caps boundaries edges for each individual row block group */
+.heatmap-table td:first-child { 
+    border-top-left-radius: 8px; 
+    border-bottom-left-radius: 8px; 
+    text-align: left; 
+    padding-left: 15px; 
+    color: #1f2937; 
+}
+
+.heatmap-table td:last-child { 
+    border-top-right-radius: 8px; 
+    border-bottom-right-radius: 8px; 
+}
+
+/* Balanced subtle professional modern pastel tones for color block definitions */
+.heat-high { background-color: #ecfdf5 !important; color: #059669; }
+.heat-medium { background-color: #fffbeb !important; color: #d97706; }
+.heat-low { background-color: #fef2f2 !important; color: #dc2626; }
+
+/* Status alert warning indicator badges layouts styling */
+.status-pill { 
+    padding: 4px 10px; 
+    border-radius: 12px; 
+    font-size: 11px; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    display: inline-block; 
+}
+.status-stable { background: #e0f2fe; color: #0369a1; }
+.status-drop { background: #ffeeec; color: #bc1c1c; }

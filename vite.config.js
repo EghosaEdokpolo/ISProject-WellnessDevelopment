@@ -9,6 +9,8 @@ export default defineConfig({
                 'resources/css/HR_impact.css', 'resources/css/HR_departmental.css',
                 'resources/css/HR_retention.css', 'resources/css/hr_settings.css',
                 'resources/css/hr_events_edit.css', 'resources/css/hr_eventmanage.css',
+                'resources/css/checkin_arrival.css',
+                
                 
                 
                 'resources/js/app.js', 'resources/js/hr_impact_filter.js', 

@@ -19,12 +19,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+    // Public Venue Arrival QR Check-In Routes (No login required on phone)
+    Route::get('/checkin/scan/{event}', [CheckInController::class, 'arrivalForm'])->name('checkin.scan');
+    Route::post('/checkin/scan/{event}', [CheckInController::class, 'verifyArrival'])->name('checkin.verify');
+
+
 Route::middleware('auth')->group(function () {
 
     // Let AuthenticatedSessionController destroy the login session
     Route::post('/auth/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
-
 
     Route::get('/dashboard', function () {
         return auth()->user()->isHrCoordinator()
@@ -38,10 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/registrations/{registration}/waiver', [RegistrationController::class, 'waiverForm'])->name('registrations.waiver');
     Route::post('/registrations/{registration}/waiver', [RegistrationController::class, 'waiverStore'])->name('registrations.waiver.store');
     
-    Route::get('/checkin', [CheckInController::class, 'index'])->name('checkin.index');
-    Route::get('/checkin/event/{event}', [CheckInController::class, 'scan'])->name('checkin.scan');
-    Route::get('/checkin/{registration}', [CheckInController::class, 'show'])->name('checkin.show');
-    Route::post('/checkin/{registration}/confirm', [CheckInController::class, 'confirm'])->name('checkin.confirm');
+    // Route::get('/checkin', [CheckInController::class, 'index'])->name('checkin.index');
+    // Route::get('/checkin/event/{event}', [CheckInController::class, 'scan'])->name('checkin.scan');
+    // Route::get('/checkin/{registration}', [CheckInController::class, 'show'])->name('checkin.show');
+    // Route::post('/checkin/{registration}/confirm', [CheckInController::class, 'confirm'])->name('checkin.confirm');
     
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
     Route::get('/registrations/{registration}/feedback', [FeedbackController::class, 'create'])->name('feedback.create');

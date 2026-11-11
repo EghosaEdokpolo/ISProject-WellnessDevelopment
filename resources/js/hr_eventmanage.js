@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('downloadQrBtn');
     let currentSvg = null;
     let currentQrId = null;
+    let currentQrName = null;
 
     document.querySelectorAll('.qr-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 qrHolder.innerHTML = svgText;
                 currentSvg = svgText;
                 currentQrId = id;
+                currentQrName = name;
                 downloadBtn.disabled = false;
             } catch (err) {
                 qrHolder.innerHTML = `<span style="color:#b91c1c; font-size:13px;">Failed: ${err.message}</span>`;
@@ -52,11 +54,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (downloadBtn) {
         downloadBtn.addEventListener('click', () => {
             if (!currentSvg || !currentQrId) return;
+
+            // Remove characters Windows/Mac don't allow in filenames (like / \ : * ? " < > |)
+            const safeName = currentQrName.replace(/[\/\\:*?"<>|]/g, '').trim();
+
             const blob = new Blob([currentSvg], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `event-${currentQrId}-qr.svg`;
+            a.download = `${safeName} QR code.svg`;
             a.click();
             URL.revokeObjectURL(url);
         });

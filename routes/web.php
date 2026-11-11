@@ -12,6 +12,7 @@ use App\Http\Controllers\Reports\PdfExportController;
 use Illuminate\Support\Facades\Route; 
 use App\Http\Controllers\HrImpactController;
 use App\Http\Controllers\HrSettingsController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 
 Route::get('/', function () {
@@ -19,6 +20,12 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
+
+    // Let AuthenticatedSessionController destroy the login session
+    Route::post('/auth/logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->name('logout');
+
+
     Route::get('/dashboard', function () {
         return auth()->user()->isHrCoordinator()
             ? redirect()->route('dashboard.hr')
@@ -62,10 +69,6 @@ Route::middleware('auth')->group(function () {
         // Route to handle the points reset button action
             Route::post('/points/reset', [HrSettingsController::class, 'resetPoints']);
 
-            // Let AuthenticatedSessionController destroy the login session
-            Route::post('/auth/logout', [AuthenticatedSessionController::class, 'destroy'])
-                ->name('logout');
-
         
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
         Route::post('/events', [EventController::class, 'store'])->name('events.store');
@@ -81,7 +84,13 @@ Route::middleware('auth')->group(function () {
         //feedback routes
         Route::get('/hr/feedback-logs', [DashboardController::class, 'feedbackLogs'])->name('hr.feedback.logs');
         
+        // Event Edit, Update, and Delete Routes
+        Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
+        Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
+        Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+
     });
+    
 });
 
 require __DIR__.'/auth.php';

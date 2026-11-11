@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Event extends Model
 {
     protected $fillable = [
-        'name', 'category', 'description', 'starts_at', 'location', 'capacity', 'created_by',
+        'name', 'category', 'description', 'starts_at', 'location', 'capacity', 'created_by', 'points_checkin', 'points_feedback', 'comlink',
     ];
 
     // POINTER: casts() tells Eloquent to automatically convert this database
@@ -48,6 +48,14 @@ class Event extends Model
             'mental' => 'bg-wl-mint text-emerald-700',
             'financial' => 'bg-wl-cream text-amber-700',
             'social' => 'bg-wl-lilac text-purple-700',
+          'occupational'  => 'bg-blue-50 text-blue-700',       
+            'intellectual'  => 'bg-orange-50 text-orange-700',   
+            'spiritual'     => 'bg-rose-50 text-rose-700',       
+            'environmental' => 'bg-teal-50 text-teal-700',       
+            
+            // Safe fallback catcher if a category name string mismatch occurs
+            default         => 'bg-gray-100 text-gray-700',
+
         };
     }
 }

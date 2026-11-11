@@ -4,14 +4,23 @@
     <div class="flex justify-between items-end mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Upcoming Wellness Events</h1>
-            <p class="text-sm text-gray-500 mt-1">4 of 8 SAMHSA wellness dimensions covered in v1.</p>
+            <p class="text-sm text-gray-500 mt-1">8 SAMHSA wellness dimensions covered.</p>
         </div>
     </div>
 
     <!-- Category Filters -->
-    <div class="flex gap-2 mb-8 bg-white p-1.5 rounded-xl border border-gray-100 shadow-sm w-fit">
+    <div class="flex flex-wrap gap-2 mb-8 bg-white p-1.5 rounded-xl border border-gray-100 shadow-sm w-fit">
         <a href="{{ route('events.index') }}" class="px-5 py-2 rounded-lg text-sm font-semibold {{ !$activeCategory ? 'bg-wl-indigo text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50' }}">All</a>
-        @foreach(['physical' => 'Physical', 'mental' => 'Mental', 'financial' => 'Financial', 'social' => 'Social'] as $value => $label)
+        @foreach([
+            'physical' => 'Physical',
+            'mental' => 'Mental',
+            'financial' => 'Financial',
+            'social' => 'Social',
+            'occupational' => 'Occupational',
+            'intellectual' => 'Intellectual',
+            'spiritual' => 'Spiritual',
+            'environmental' => 'Environmental'
+        ] as $value => $label)
             <a href="{{ route('events.index', ['category' => $value]) }}" class="px-5 py-2 rounded-lg text-sm font-semibold {{ $activeCategory === $value ? 'bg-wl-indigo text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50' }}">
                 {{ $label }}
             </a>
@@ -43,6 +52,15 @@
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             {{ $event->location }}
                         </div>
+
+                        @if($event->comlink)
+                            <div class="flex items-center gap-2 text-sm">
+                                <svg class="w-4 h-4 text-wl-indigo shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                <a href="{{ $event->comlink }}" target="_blank" rel="noopener noreferrer" class="text-wl-indigo font-semibold hover:underline truncate">
+                                    Join / Event Communication Link
+                                </a>
+                            </div>
+                        @endif
                     </div>
 
                     @php
@@ -54,7 +72,7 @@
                             <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">You are registered</span>
                             
                             <!-- Google Calendar Link -->
-                            <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ urlencode($event->name) }}&dates={{ $event->starts_at->format('Ymd\THis') }}/{{ $event->starts_at->copy()->addHours(2)->format('Ymd\THis') }}&details={{ urlencode($event->description) }}&location={{ urlencode($event->location) }}" target="_blank" class="block w-full bg-white border border-gray-300 text-gray-700 font-semibold py-2 rounded-lg mb-2 hover:bg-gray-50 transition-colors text-sm">
+                            <a href="https://google.com{{ urlencode($event->name) }}&dates={{ $event->starts_at->format('Ymd\THis') }}/{{ $event->starts_at->copy()->addHours(2)->format('Ymd\THis') }}&details={{ urlencode($event->description) }}&location={{ urlencode($event->location) }}" target="_blank" class="block w-full bg-white border border-gray-300 text-gray-700 font-semibold py-2 rounded-lg mb-2 hover:bg-gray-50 transition-colors text-sm">
                                 <span class="flex items-center justify-center gap-2">
                                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                     Add to Calendar

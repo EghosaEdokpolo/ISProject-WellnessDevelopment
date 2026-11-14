@@ -1,0 +1,131 @@
+body { 
+            background: #f5f4f0; 
+            font-family: Frutiger LT Std Regular,'Lato', sans-serif; 
+        }
+
+        .kpi-grid-4 { 
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; 
+            padding: 0 4% 20px; 
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: center;
+        }
+        /* Forces each of the 4 cards to share the horizontal row space evenly */
+        .kpi-grid-4 .card {
+            flex: 1 1 calc(25% - 20px);
+            min-width: 220px; 
+            box-sizing: border-box;
+        }
+
+        /* Replaces .kpi-grid-2 with a safe half-and-half split row */
+        .kpi-grid-2 { 
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; 
+            padding: 0 4% 20px; 
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Forces each of the 2 lagging cards to take up exactly half space */
+        .kpi-grid-2 .card {
+            flex: 1 1 calc(50% - 20px);
+            min-width: 300px;
+            box-sizing: border-box;
+        }
+
+        .card { 
+        
+            background: #fff; border-radius: 12px;
+            padding: 20px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            border: 1px solid #e5e7eb; 
+        }
+
+        .card-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            color: #6b7280; letter-spacing: 0.5px; 
+            display: flex; 
+            justify-content: space-between; 
+        }
+
+        .metric-value { 
+            font-size: 32px; 
+            font-weight: 800; 
+            color: #02338d; 
+            margin: 10px 0 4px; 
+        }
+
+        .metric-sub { 
+            font-size: 12px; 
+            color: #9ca3af; 
+        }
+
+        .badge { 
+            padding: 2px 8px; 
+            border-radius: 12px; 
+            font-size: 10px; 
+            font-weight: 700; 
+        }
+
+        .badge-leading { 
+            background: #dcfce7; 
+            color: #166534; 
+        }
+
+        .badge-lagging { 
+            background: #fee2e2; 
+            color: #991b1b; 
+        }
+
+        .split-row { 
+            padding: 0 4% 10px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+
+        .activity-list { 
+            display: flex; 
+            flex-direction: column;
+            gap: 12px; 
+            margin-top: 15px; 
+        }
+
+        .activity-item { 
+            display: flex; 
+            gap: 12px; 
+            font-size: 13px; 
+            align-items: flex-start; 
+        }
+
+        .activity-dot { 
+            width: 8px; 
+            height: 8px; 
+            border-radius: 50%; 
+            margin-top: 5px; 
+            flex-shrink: 0; 
+        }
+
+        .dot-green { 
+            background: #10b981; 
+        }
+        
+        .dot-blue { 
+            background: #3b82f6; 
+        }
+        
+        .dot-gold { 
+            background: #f59e0b; 
+        }
+
+        .split-row {
+            margin: 20px; 
+            margin-top: 25px;
+        }

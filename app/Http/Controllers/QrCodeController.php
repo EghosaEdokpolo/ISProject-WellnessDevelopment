@@ -10,9 +10,8 @@ class QrCodeController extends Controller
 {
     public function __invoke(Request $request, Event $event)
     {
-        // This generates a URL like: https://yourdomain.com/checkin/event/1
-        // When staff scan this, it opens on their phone.
-        $url = url("/checkin/event/{$event->id}");
+        // Points directly to the public venue arrival Staff ID verification page
+        $url = route('checkin.scan', $event);
 
         // Generate the SVG (high quality for printing)
         $svg = QrCode::format('svg')->size(500)->margin(2)->generate($url);

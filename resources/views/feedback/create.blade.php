@@ -59,9 +59,18 @@
 
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-800 mb-2">Overall satisfaction</label>
-                <div class="flex gap-1 text-2xl text-wl-gold cursor-pointer">
-                    ★★★★☆
+                
+                <!-- Styled Flex Box container holding our interactive star rating controls -->
+                <div class="flex flex-row-reverse justify-end gap-1 text-2xl cursor-pointer">
+                    @for($i = 5; $i >= 1; $i--)
+                        <input type="radio" id="star-{{ $i }}" name="satisfaction_stars" value="{{ $i }}" class="sr-only peer" required>
+                        <label for="star-{{ $i }}" class="text-gray-300 hover:text-yellow-500 peer-checked:text-yellow-500 transition-colors">★</label>
+                    @endfor
                 </div>
+                
+                @error('satisfaction_stars')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <!-- DESCRIPTIVE SLIDER FOR STAKEHOLDER -->

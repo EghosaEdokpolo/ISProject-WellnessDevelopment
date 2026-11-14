@@ -36,7 +36,8 @@ class RegistrationController extends Controller
         Waiver::updateOrCreate(['registration_id' => $registration->id], ['signature_name' => $data['signature_name'], 'signed_at' => now()]);
         $this->awardPointsOnce($registration, 'waiver_signed', 5);
 
-        return redirect()->route('checkin.show', $registration)->with('status', 'Waiver signed.');
+        return redirect()->route('events.index')
+            ->with('status', 'Waiver signed! Scan the QR code at the venue on arrival to check in.');
     }
 
     private function awardPointsOnce(Registration $registration, string $reason, int $points): void

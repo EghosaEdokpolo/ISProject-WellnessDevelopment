@@ -1,117 +1,141 @@
-/**
- * HR Dashboard Impact Category Filter Engine
- * Handles real-time dashboard updates without reloading the webpage.
- */
 document.addEventListener('DOMContentLoaded', function () {
-    const filterButtons = document.querySelectorAll('.filter-pill');
+    let impactChartInstance = null;
 
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault(); // Stop any default button jumping action
+    function renderChart(labels, preData, postData) {
+        const canvas = document.getElementById('impactCanvasEngine');
+        if (!canvas) return;
 
-            // 1. Toggle active visual look instantly
-            filterButtons.forEach(btn => btn.classList.remove('active'));
+        if (impactChartInstance) {
+            impactChartInstance.destroy();
+        }
+
+        impactChartInstance = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels, 
+                datasets: [
+                    { label: 'Pre-event', data: preData, backgroundColor: '#e5e7eb', borderRadius: 4 },
+                    { label: 'Post-event', data: postData, backgroundColor: '#02338d', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                resizeDelay: 100,
+                plugins: {
+                    legend: {
+                        position: 'bottom', // Moves legend down below chart
+                        labels: { 
+                            font: { 
+                                family: "'Lato', 'Segoe UI', 'Arial', 'Helvetica', sans-serif", 
+                                size: 13,
+                                weight: '700'
+                            } 
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "'Lato', 'Segoe UI', 'Arial', 'Helvetica', sans-serif", size: 11 } }
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        max: 25,
+                        grid: { borderDash: [5, 5] },
+                        ticks: { font: { family: "'Lato', 'Segoe UI', 'Arial', 'Helvetica', sans-serif", size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // 1. Initial Load Chart Initialization
+    const initialCanvas = document.getElementById('impactCanvasEngine');
+    if (initialCanvas) {
+        const labels = JSON.parse(initialCanvas.getAttribute('data-categories')) || [];
+        const preData = JSON.parse(initialCanvas.getAttribute('data-pre-avgs')) || [];
+        const postData = JSON.parse(initialCanvas.getAttribute('data-post-avgs')) || [];
+        renderChart(labels, preData, postData);
+    }
+
+    // 2. Click Handler for Filter Pills
+    const filterPills = document.querySelectorAll('.filter-pill-btn');
+    
+    filterPills.forEach(pill => {
+        pill.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            filterPills.forEach(p => p.classList.remove('active'));
             this.classList.add('active');
 
             const category = this.getAttribute('data-category');
-            
-            // Safe check for the base routing path meta tag
-            const metaTag = document.querySelector('meta[name="impact-route"]');
-            if (!metaTag) {
-                console.error('Error: Meta tag name="impact-route" missing from HTML head.');
-                return;
-            }
-            const baseUrl = metaTag.getAttribute('content');
+            const tableBody = document.getElementById('table-rows-container');
 
-            // 2. Target the graph and table containers
-            const graphContainer = document.getElementById('graph-bars-container');
-            const tableContainer = document.getElementById('table-rows-container');
-            
-            if (tableContainer) {
-                tableContainer.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#888;">Filtering data...</td></tr>';
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">Updating views...</td></tr>';
             }
 
-            // 3. Fire background dynamic data call
-            fetch(`${baseUrl}?category=${category}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            fetch(`/impact-analytics?category=${category}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
-                
-                // 4. OVERWRITE TOP SUMMARY CARDS TEXT
-                const cardWrapper = document.querySelector('.cards-container-wrapper');
-                if (cardWrapper) {
-                    const values = cardWrapper.querySelectorAll('.metric-value');
-                    if (values.length >= 4) {
-                        values[0].textContent = data.avgLift;
-                        values[1].textContent = data.avgPreScore + '/25';
-                        values[2].textContent = data.avgPostScore + '/25';
-                        values[3].textContent = data.eventsInView;
-                    }
-                    const textNodes = cardWrapper.querySelectorAll('.card-subtext');
-                    if (textNodes.length > 0) {
-                        textNodes[textNodes.length - 1].textContent = `of ${data.eventsThisSemester} this semester`;
+                // Adjust visibility of the High/Low banner row
+                const bannerRow = document.getElementById('highest-lowest-banner-row');
+                if (bannerRow) {
+                    bannerRow.style.display = (category === 'all' || !category) ? 'block' : 'none';
+                    if (category === 'all' || !category) {
+                        document.getElementById('highest-dim-text').textContent = data.highestDim;
+                        document.getElementById('lowest-dim-text').textContent = data.lowestDim;
                     }
                 }
 
-                // 5. OVERWRITE 12-MONTH GRAPH BARS PILLARS
-                if (graphContainer) {
-                    let graphHtml = '';
-                    Object.entries(data.graphBars).forEach(([monthName, bars]) => {
-                        graphHtml += `
-                            <div class="impact-month-column">
-                                <div class="impact-pair-group">
-                                    <div class="impact-pillar bar-pre" style="--bar-height: ${bars.pre_height}%;"></div>
-                                    <div class="impact-pillar bar-post" style="--bar-height: ${bars.post_height}%;"></div>
-                                </div>
-                                <span class="impact-xaxis-label">${monthName}</span>
-                                <div class="impact-hover-tooltip">
-                                    <h4 class="impact-tooltip-title">${monthName}</h4>
-                                    <p class="impact-tooltip-row text-light">Pre-event: <span>${bars.pre_raw}</span></p>
-                                    <p class="impact-tooltip-row text-blue">Post-event: <span>${bars.post_raw}</span></p>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    graphContainer.innerHTML = graphHtml;
+                // Update KPI Card metric values
+                const cardContainer = document.getElementById('impact-kpi-cards-wrapper');
+                if (cardContainer) {
+                    const metrics = cardContainer.querySelectorAll('.metric-value');
+                    if (metrics.length >= 4) {
+                        metrics[0].textContent = data.avgLift;
+                        metrics[1].textContent = data.avgPreScore;
+                        metrics[2].textContent = data.avgPostScore;
+                        metrics[3].textContent = data.eventsInView;
+                    }
                 }
 
-                // 6. OVERWRITE BOTTOM COMPONENT TABLE ROWS
-                if (tableContainer) {
-                    let tableHtml = '';
+                // Update Chart JS Layout Vectors
+                const updatedLabels = Object.keys(data.graphBars);
+                const updatedPre = Object.values(data.graphBars).map(v => v.pre_avg);
+                const updatedPost = Object.values(data.graphBars).map(v => v.post_avg);
+                renderChart(updatedLabels, updatedPre, updatedPost);
+
+                // Re-render data table records markup rows
+                if (tableBody) {
+                    let html = '';
                     if (data.eventsTableRows.length === 0) {
-                        tableHtml = `
-                            <tr>
-                                <td colspan="6" class="center-text dash-placeholder" style="text-align: center; padding: 30px; color:#9ca3af; font-weight:bold;">
-                                    No active event evaluation logs found for this filter category.
-                                </td>
-                            </tr>
-                        `;
+                        html = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#9ca3af;">No event logs found for this criteria.</td></tr>';
                     } else {
                         data.eventsTableRows.forEach(row => {
-                            tableHtml += `
+                            const val = parseFloat(row.lift);
+                            const cls = val > 0 ? 'lift-positive' : (val < 0 ? 'lift-negative' : '');
+                            
+                            html += `
                                 <tr>
-                                    <td class="event-name-cell" style="text-align:left; font-weight:600;">${row.name}</td>
-                                    <td class="center-text metric-number" style="text-align:center;">${row.participants}</td>
-                                    <td class="center-text metric-number" style="text-align:center;">${row.pre_avg}</td>
-                                    <td class="center-text metric-number" style="text-align:center;">${row.post_avg}</td>
-                                    <td class="center-text font-bold metric-number" style="text-align:center; font-weight:700;">${row.lift}</td>
-                                    <td class="center-text metric-number" style="text-align:center;">${row.follow_up}</td>
+                                    <td style="text-align: left;"><strong>${row.name}</strong></td>
+                                    <td>${row.category}</td>
+                                    <td>${row.pre_avg}</td>
+                                    <td>${row.post_avg}</td>
+                                    <td class="${cls}" style="font-weight:700;">${row.lift}</td>
+                                    <td style="font-weight: bold; color: #10b981;">${row.survey_status}</td>
+                                    <td style="font-weight: bold; color: ${statusColor};">${row.survey_status}</td>
                                 </tr>
                             `;
                         });
                     }
-                    tableContainer.innerHTML = tableHtml;
+                    tableBody.innerHTML = html;
                 }
             })
-            .catch(error => {
-                console.error('Error handling AJAX filter request:', error);
-                if (tableContainer) {
-                    tableContainer.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:red;">Failed to filter data.</td></tr>';
-                }
-            });
+            .catch(err => console.error("AJAX Fetch Engine Request Error:", err));
         });
     });
 });

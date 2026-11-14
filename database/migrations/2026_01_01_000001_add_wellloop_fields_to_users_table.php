@@ -12,9 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // employee_id is what staff type manually at check-in if the QR fails (accessibility fallback)
-            $table->string('employee_id')->unique()->nullable()->after('id');
-
             // enum() restricts the column to only these two values at the DB level
             $table->enum('role', ['staff', 'hr_coordinator'])->default('staff')->after('employee_id');
 

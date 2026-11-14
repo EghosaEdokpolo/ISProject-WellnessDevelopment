@@ -1,0 +1,139 @@
+/* Clean slate resets explicitly for this feedback analysis page */
+.feedback-logs-body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f5f4f0;
+    margin: 0;
+    padding: 24px 4%;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden; /* Strict lock preventing horizontal page scrolling */
+}
+
+/* Back Link Navigation styling */
+.back-nav-link {
+    color: #02338d;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 20px;
+    transition: color 0.2s ease;
+}
+.back-nav-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* Page Titles */
+.logs-title {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+}
+.logs-subtitle {
+    margin: 0 0 25px 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* The Filter Filter Box Card Panel Wrapper */
+.filter-panel-card {
+    padding: 10px 0;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filter-form-layout {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap; /* Allows dropping items cleanly on smaller viewport screens */
+    width: 100%;
+}
+
+.select-dropdown-box {
+    width: 100%;
+    max-width: 400px;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid #babcbe;
+    padding: 0 12px;
+    margin-top: 6px;
+    background-color: #f9fafb;
+    font-size: 14px;
+    color: #374151;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.15s ease-in-out;
+}
+.select-dropdown-box:focus {
+    border-color: #02338d;
+    box-shadow: 0 0 0 3px rgba(2, 51, 141, 0.15);
+    background-color: #ffffff;
+}
+
+/* THE MASTER FEEDBACK RECORDS COLUMN STREAM */
+.feedback-stream-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* The Individual Log Row Cards */
+.feedback-log-row-card {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    border-left: 6px solid #02338d;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    border-top: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    width: 100%;
+    box-sizing: border-box; /* Crucial: padding calculates INSIDE the 100% width barrier */
+}
+
+.feedback-comment-text {
+    font-size: 14px;
+    color: #1f2937;
+    font-style: italic;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+    text-align: left;
+}
+
+/* The Meta Row sitting on card footlines */
+.feedback-meta-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 15px;
+}
+
+.author-attribution {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.event-tag-pill {
+    font-size: 11px;
+    background-color: #e5e7eb;
+    color: #374151;
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-weight: 700;
+    white-space: nowrap; /* Keeps pill together */
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Safely cuts off text inside the badge if event name is giant */
+}

@@ -1,90 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <!-- Meta data about the page that isn't seen -->
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="author" content="group 1">
-        <meta name="description" content="Contains the login page credentials in order to access the strathmore wellness website. Affiliated with Strathmore University">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strathmore Wellness - Login</title>
+    <link rel="icon" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}" type="image/x-icon">
+    
+    <!-- Tailwind for fast styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { brand: '#02338d', wl: { gold: '#c99a2e' } } } } }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col justify-center items-center font-sans">
+
+    <!-- Logo -->
+    <div class="mb-8">
+        <a href="https://strathmore.edu" target="_blank">
+            <img src="{{ asset('images/Strathmore_uni_logo-text.png') }}" alt="Strathmore University Logo" class="h-24">
+        </a>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-brand text-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-8 border-wl-gold">
+        <h1 class="text-3xl font-bold text-center mb-8">Log In To Your Account!</h1>
         
-        <!-- Laravel Vite directive to load compiled application bundles if needed -->
-        @vite(['resources/css/style.css', 'resources/js/app.js'])
+        <form method="POST" action="{{ route('login') }}" class="space-y-5">
+            @csrf
 
-        <!-- Favicon -->
-            <link rel="icon" type="image/png" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}?v=2">
-
-
-        <!-- 
-          THE DEDICATED STYLESHEET
-          The asset() helper targets the 'public/' folder. 
-          This line maps cleanly to: public/css/style.css 
-        -->
-        <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-        
-        <title>Strathmore wellness-Login</title>
-    </head>
-
-    <body>
-        <!-- Data about the page that is seen -->
-
-        <!-- Strathmore Image Wrapper using the public/ images folder asset -->
-        <div id="loginstrathlogo">
-            <a href="https://strathmore.edu">
-                <img src="{{ asset('images/Strathmore_uni_logo-text.png') }}" alt="Picture of Strathmore University Logo" title="Strathmore University Logo">
-            </a>
-        </div>
-
-        <!-- Main Login Box Structure using your dedicated #loginform ID layout rules -->
-        <div id="loginform">
-            <h1>Log In To Your Account!</h1>
-
-            <!-- 
-              ERROR ALERT FEEDBACK
-              If login validation fails, this block pops up to display the error text.
-              You can style the class "error-box" inside your public/css/style.css file!
-            -->
-            @if ($errors->any())
-                <div class="error-box" style="color: #b91c1c; background-color: #fef2f2; border: 1px solid #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
-                    <ul style="list-style: inside; margin: 0; padding: 0;">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+            <!-- Error Messages -->
+            @if($errors->any())
+                <div class="bg-red-500 text-white p-3 rounded-lg text-sm font-semibold">
+                    {{ $errors->first() }}
                 </div>
             @endif
 
-            <!-- 
-              FORM ACTIONS
-              Submits data securely to the Laravel Auth Controller using POST 
-            -->
-            <form action="{{ route('login') }}" method="POST">
-                <!-- 
-                  @csrf Token: Laravel security verification.
-                  Mandatory for handling local database form submissions.
-                -->
-                @csrf
+            <div>
+                <label for="staff_id" class="block text-sm font-semibold mb-1">Staff ID Number</label>
+                <input type="text" name="staff_id" id="staff_id" required placeholder="000000" 
+                       class="w-full px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-4 focus:ring-wl-gold/50">
+            </div>
 
-                <h2>Staff ID Number</h2>
-                <label for="staff_id"></label>
-                <!-- name updated to 'staff_id' to speak with the backend login request rules -->
-                <input type="text" name="staff_id" id="staff_id" required placeholder="000000" value="{{ old('staff_id') }}">
+            <div>
+                <label for="password" class="block text-sm font-semibold mb-1">Password</label>
+                <input type="password" name="password" id="password" required 
+                       class="w-full px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-4 focus:ring-wl-gold/50">
+            </div>
 
-                <h2>Password</h2>
-                <label for="password"></label>
-                <input type="password" name="password" id="password" required>
-                <br>
-                
-                <!-- Uses your dedicated .loginbutton styles from style.css -->
-                <button class="loginbutton" type="submit">Login</button>
+            <button type="submit" class="w-full bg-wl-gold text-brand font-bold text-lg py-3 rounded-lg hover:bg-yellow-600 transition shadow-md mt-4">
+                Login
+            </button>
+        </form>
 
-                <br>
-                <a href="https://su-sso.strathmore.edu/staff-pss/private/login" target="_blank" rel="noopener noreferrer">Forgotten your credentials?</a>
-            </form>
+        <!-- Updated Forgot Password Link -->
+        <div class="mt-6 text-center">
+            <a href="{{ route('password.request') }}" class="text-sm font-semibold text-gray-200 hover:text-white hover:underline transition">
+                Forgot your WPMIS password?
+            </a>
         </div>
+    </div>
 
-        <!-- Global Base Footer -->
-        <footer class="footer">
-            <p>&copy; {{ date('Y') }} Strathmore - All Rights Reserved</p> 
-        </footer>
-    </body>
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+        <p>&copy; {{ date('Y') }} Strathmore University - All Rights Reserved</p>
+    </footer>
+
+</body>
 </html>

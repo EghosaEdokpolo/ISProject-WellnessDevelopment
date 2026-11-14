@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Feedback;
@@ -12,7 +14,6 @@ use Illuminate\View\View;
 
 class FeedbackController extends Controller
 {
-    // Shows the list of events the user attended
     public function index(): View
     {
         $registrations = Registration::with(['event', 'feedback'])
@@ -30,19 +31,19 @@ class FeedbackController extends Controller
         return view('feedback.create', compact('registration'));
     }
 
-    public function store(Request $request, Registration $registration): View|RedirectResponse
+    public function store(Request $request, Registration $registration): View
     {
         abort_unless(auth()->id() === $registration->user_id, 403);
 
         $data = $request->validate([
-            'item_cheerful' => ['required', 'integer', 'between:0,4'],
-            'item_calm' => ['required', 'integer', 'between:0,4'],
-            'item_active' => ['required', 'integer', 'between:0,4'],
-            'item_rested' => ['required', 'integer', 'between:0,4'],
-            'item_interested' => ['required', 'integer', 'between:0,4'],
-            'satisfaction_stars' => ['required', 'integer', 'between:1,5'],
-            'social_quality' => ['required', 'integer', 'between:1,10'],
-            'comments' => ['nullable', 'string', 'max:2000'],
+            'item_cheerful' => 'required|integer|between:0,4',
+            'item_calm' => 'required|integer|between:0,4',
+            'item_active' => 'required|integer|between:0,4',
+            'item_rested' => 'required|integer|between:0,4',
+            'item_interested' => 'required|integer|between:0,4',
+            'satisfaction_stars' => 'required|integer|between:1,5',
+            'social_quality' => 'required|integer|between:1,10',
+            'comments' => 'nullable|string|max:2000',
         ]);
 
         $total = array_sum([
@@ -53,6 +54,7 @@ class FeedbackController extends Controller
             $data['item_interested']
         ]);
 
+        // Removed 'assessed_at' here
         WellbeingResponse::updateOrCreate(
             ['registration_id' => $registration->id, 'stage' => 'post'], 
             [
@@ -75,17 +77,22 @@ class FeedbackController extends Controller
         );
 
         $registration->update(['status' => 'completed']);
-        
-        $this->awardPointsOnce($registration, 'feedback_submitted', 5);
+        $this->awardPointsOnce($registration, 'feedback_submitted', 10);
 
-        // Loads the Success Page you provided!
         return view('feedback.success'); 
     }
 
     private function awardPointsOnce(Registration $registration, string $reason, int $points): void
     {
         if (PointsTransaction::where('registration_id', $registration->id)->where('reason', $reason)->exists()) return;
-        PointsTransaction::create(['user_id' => $registration->user_id, 'registration_id' => $registration->id, 'reason' => $reason, 'points' => $points]);
+        
+        PointsTransaction::create([
+            'user_id' => $registration->user_id, 
+            'registration_id' => $registration->id, 
+            'reason' => $reason, 
+            'points' => $points
+        ]);
+        
         $registration->user->increment('points_balance', $points);
     }
 }

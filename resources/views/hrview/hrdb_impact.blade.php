@@ -4,99 +4,164 @@
     <meta charset="UTF-8">
     <title>Wellness Impact Score</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}?v=2">
-    <!-- Strathmore Brand Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
-    @vite(['resources/css/hr_view_style.css', 'resources/js/app.js'])
-    <style>
-        body { background: #f5f4f0; font-family: 'Lato', sans-serif; }
-        .filter-row { padding: 0 4% 20px; display: flex; gap: 8px; }
-        .pill { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; color: #4b5563; background: #fff; border: 1px solid #d1d5db; }
-        .pill.active { background: #02338d; color: #fff; border-color: #02338d; }
-        .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 0 4% 20px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
-        .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.5px; }
-        .metric-value { font-size: 32px; font-weight: 800; color: #02338d; margin: 10px 0 4px; }
-        .metric-sub { font-size: 12px; color: #9ca3af; }
-        .data-table { width:100%; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-collapse:collapse; }
-        .data-table th { background:#02338d; color:#fff; padding:12px; text-align:left; font-size:12px; font-weight:600; }
-        .data-table td { padding:12px; border-bottom:1px solid #eee; font-size:13px; color:#374151; }
-        .lift-positive { color:#0a7b2b; font-weight:700; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { brand: '#02338d', 'brand-light': '#e8f0fe', wl: { gold: '#c99a2e' } } } } }
+    </script>
+    <style> body { font-family: 'Inter', sans-serif; background-color: #f8fafc; } </style>
 </head>
 <body>
-    <div class="header-title"><img src="{{ asset('assets/Strathmore_uni_logo-notext.png') }}"> WPMIS — WELLNESS PROGRAMME MANAGEMENT & IMPACT SYSTEM</div>
-    <header class="nav-head"><nav class="nav-menu">
-        <div class="pillgroup1"><span class="category-label">Dashboards</span>
-            <a href="{{ route('dashboard.hr') }}" class="nav-link"><img src="{{ asset('images/analytics-icon.png') }}" class="nav-icon"> Overview</a>
-            <a href="{{ route('impact.analytics') }}" class="nav-link active"><img src="{{ asset('images/Impact-icon.png') }}" class="nav-icon"> Impact</a>
-            <a href="{{ route('retention.metrics') }}" class="nav-link"><img src="{{ asset('images/retention-icon1.png') }}" class="nav-icon"> Retention</a>
-            <a href="{{ route('department.analysis') }}" class="nav-link"><img src="{{ asset('images/department-icon.png') }}" class="nav-icon"> Departmental</a>
-        </div>
-        <a href="{{ route('attendees.index') }}" class="nav-link"><img src="{{ asset('images/attendance-icon.png') }}" class="nav-icon"> Attendees</a>
-        <a href="{{ route('events.management') }}" class="nav-link"><img src="{{ asset('images/events-icon.png') }}" class="nav-icon"> Events</a>
-        <a href="{{ route('settings.edit') }}" class="nav-link"><img src="{{ asset('images/settings-icon.png') }}" class="nav-icon"> Settings</a>
-    </nav></header>
+    <x-hr-nav />
 
-    <div style="padding: 0 4%; margin-bottom: 20px;">
-        <h1 style="margin-bottom: 5px;">Wellness Impact Score <span style="font-size:12px; background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:12px; vertical-align:middle;">● Lagging</span></h1>
-        <p style="margin-top:0; color:#6b7280; font-size:14px;">WHO-5 Well-Being Index — validated instrument (score 0–25). Score below 13 indicates poor wellbeing. Pre vs post comparison per event.</p>
-    </div>
-
-    <div class="filter-row">
-        <a href="{{ route('impact.analytics') }}" class="pill {{ !$activeCategory ? 'active' : '' }}">All</a>
-        <a href="{{ route('impact.analytics', ['category' => 'physical']) }}" class="pill {{ $activeCategory === 'physical' ? 'active' : '' }}">Physical</a>
-        <a href="{{ route('impact.analytics', ['category' => 'mental']) }}" class="pill {{ $activeCategory === 'mental' ? 'active' : '' }}">Mental</a>
-        <a href="{{ route('impact.analytics', ['category' => 'financial']) }}" class="pill {{ $activeCategory === 'financial' ? 'active' : '' }}">Financial</a>
-        <a href="{{ route('impact.analytics', ['category' => 'social']) }}" class="pill {{ $activeCategory === 'social' ? 'active' : '' }}">Social</a>
-    </div>
-
-    @if($highestDim && $lowestDim)
-    <div style="padding: 0 4% 20px;">
-        <div class="card" style="background: #f0fdf4; border-color: #bbf7d0; display: flex; justify-content: space-between; align-items: center;">
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-                <p style="margin: 0; font-weight: 700; color: #166534; font-size: 14px;">Highest Impact Dimension</p>
-                <p style="margin: 0; font-size: 20px; font-weight: 800; color: #166534; text-transform: capitalize;">{{ $highestDim }}</p>
+                <div class="flex items-center gap-3 mb-1">
+                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Wellness Impact Score</h1>
+                    <span class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full uppercase tracking-wider">Lagging</span>
+                </div>
+                <p class="text-sm text-gray-500">WHO-5 Well-Being Index — validated instrument (score 0–25). Pre vs post comparison per event.</p>
             </div>
-            <div style="text-align: right;">
-                <p style="margin: 0; font-weight: 700; color: #991b1b; font-size: 14px;">Lowest Impact Dimension</p>
-                <p style="margin: 0; font-size: 20px; font-weight: 800; color: #991b1b; text-transform: capitalize;">{{ $lowestDim }}</p>
+
+            <div class="flex gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-sm w-fit">
+                <a href="{{ route('impact.analytics') }}" class="px-4 py-1.5 rounded-lg text-xs font-bold {{ !$activeCategory ? 'bg-brand text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50' }}">All</a>
+                @foreach(['physical', 'mental', 'financial', 'social'] as $cat)
+                    <a href="{{ route('impact.analytics', ['category' => $cat]) }}" class="px-4 py-1.5 rounded-lg text-xs font-bold capitalize {{ $activeCategory === $cat ? 'bg-brand text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50' }}">
+                        {{ $cat }}
+                    </a>
+                @endforeach
             </div>
         </div>
-    </div>
-    @endif
 
-    <div class="kpi-grid-4">
-        <div class="card"><div class="card-label">AVG WHO-5 LIFT</div><div class="metric-value" style="color:#0a7b2b;">+{{ $categories['mental']['avg_lift'] ?? 0 }}</div><div class="metric-sub">points gained (0–25 scale)</div></div>
-        <div class="card"><div class="card-label">AVG SATISFACTION</div><div class="metric-value">4.3/5</div><div class="metric-sub">across filtered events</div></div>
-        <div class="card"><div class="card-label">4–6 WK FOLLOW-UP</div><div class="metric-value" style="color:#cca04a;">17.2</div><div class="metric-sub">sustained wellbeing</div></div>
-        <div class="card"><div class="card-label">EVENTS IN VIEW</div><div class="metric-value">{{ count($eventTable) }}</div><div class="metric-sub">of {{ count($eventTable) }} this semester</div></div>
-    </div>
+        @if($highestDim && $lowestDim)
+            <div class="bg-gradient-to-r from-emerald-50 to-red-50 rounded-xl border border-emerald-100 p-4 mb-8 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg></div>
+                    <div>
+                        <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Highest Impact Dimension</p>
+                        <p class="text-lg font-bold text-emerald-800 capitalize">{{ $highestDim }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-red-700 uppercase tracking-wider">Lowest Impact Dimension</p>
+                        <p class="text-lg font-bold text-red-800 capitalize">{{ $lowestDim }}</p>
+                    </div>
+                    <div class="p-2 bg-red-100 text-red-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg></div>
+                </div>
+            </div>
+        @endif
 
-    <div class="card" style="margin: 0 4% 20px;">
-        <div class="card-label">WHO-5 Pre / Post / Follow-up by Event</div>
-        <div class="chart-placeholder" style="height:150px; display:flex; align-items:flex-end; justify-content:space-around; background:#f9fafb; margin-top:15px; border-radius:8px;">
-             <div style="width:20px; height:40%; background:#e5e7eb;"></div><div style="width:20px; height:60%; background:#02338d;"></div>
-             <div style="width:20px; height:50%; background:#e5e7eb;"></div><div style="width:20px; height:70%; background:#02338d;"></div>
-             <div style="width:20px; height:30%; background:#e5e7eb;"></div><div style="width:20px; height:80%; background:#02338d;"></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-gray-500 text-sm font-medium">Avg WHO-5 Lift</h3>
+                <div class="text-3xl font-extrabold text-emerald-600 mt-1">
+                    {{ $categories['mental']['avg_lift'] > 0 ? '+' : '' }}{{ $categories['mental']['avg_lift'] ?? 0 }}
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Points gained (0–25 scale)</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-gray-500 text-sm font-medium">Events Analysed</h3>
+                <div class="text-3xl font-extrabold text-gray-900 mt-1">{{ count($eventTable) }}</div>
+                <p class="text-xs text-gray-400 mt-2">Events with survey data</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-gray-500 text-sm font-medium">Total Survey Responses</h3>
+                <div class="text-3xl font-extrabold text-brand mt-1">
+                    {{ collect($eventTable)->sum('responses') }}
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Completed pre & post pairs</p>
+            </div>
         </div>
-    </div>
 
-    <div style="padding: 0 4% 40px;">
-        <table class="data-table">
-            <thead><tr><th>Event</th><th>Category</th><th>Pre Avg</th><th>Post Avg</th><th>Lift</th><th>Follow-up</th></tr></thead>
-            <tbody>
-                @forelse($eventTable as $row)
-                    <tr>
-                        <td><strong>{{ $row['event'] }}</strong></td><td>{{ ucfirst($row['category']) }}</td>
-                        <td>{{ $row['pre_average'] ?? '—' }}</td><td>{{ $row['post_average'] ?? '—' }}</td>
-                        <td class="{{ $row['lift'] > 0 ? 'lift-positive' : '' }}">{{ $row['lift'] > 0 ? '+' : '' }}{{ $row['lift'] }}</td>
-                        <td>{{ $row['follow_up'] ? '✔' : '—' }}</td>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+            <h2 class="text-lg font-bold text-gray-900 mb-6">WHO-5 Pre / Post / Follow-up by Event</h2>
+            
+            @if(count($eventTable) > 0 && collect($eventTable)->sum('responses') > 0)
+                <div class="h-80 w-full">
+                    <canvas id="impactChart"></canvas>
+                </div>
+            @else
+                <div class="h-64 flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                    <svg class="w-12 h-12 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <p class="text-sm font-medium">No survey data yet.</p>
+                    <p class="text-xs mt-1">Once staff complete their WHO-5 surveys, the chart will appear here.</p>
+                </div>
+            @endif
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4">Event</th>
+                        <th class="px-6 py-4">Category</th>
+                        <th class="px-6 py-4 text-center">Responses</th>
+                        <th class="px-6 py-4 text-center">Pre Avg</th>
+                        <th class="px-6 py-4 text-center">Post Avg</th>
+                        <th class="px-6 py-4 text-center">Lift</th>
+                        <th class="px-6 py-4 text-center">Follow-up</th>
                     </tr>
-                @empty
-                    <tr><td colspan="6" style="text-align:center;">No events found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-sm">
+                    @forelse($eventTable as $row)
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 font-bold text-gray-900">{{ $row['event'] }}</td>
+                            <td class="px-6 py-4 text-gray-500 capitalize">{{ $row['category'] }}</td>
+                            <td class="px-6 py-4 text-center font-semibold text-gray-700">{{ $row['responses'] }}</td>
+                            <td class="px-6 py-4 text-center text-gray-600">{{ $row['pre_average'] ?? '—' }}</td>
+                            <td class="px-6 py-4 text-center text-gray-600">{{ $row['post_average'] ?? '—' }}</td>
+                            <td class="px-6 py-4 text-center">
+                                @if($row['lift'] > 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-bold text-xs">+{{ $row['lift'] }}</span>
+                                @elseif($row['lift'] < 0)
+                                    <span class="inline-flex items-center px-2 py-1 rounded bg-red-50 text-red-700 font-bold text-xs">{{ $row['lift'] }}</span>
+                                @else
+                                    <span class="text-gray-400 font-medium">0</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-center text-gray-500">{{ $row['follow_up'] ?? '—' }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No events found for this category.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    @if(count($eventTable) > 0 && collect($eventTable)->sum('responses') > 0)
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('impactChart').getContext('2d');
+            const labels = {!! json_encode(array_column($eventTable, 'event')) !!};
+            const preData = {!! json_encode(array_column($eventTable, 'pre_average')) !!};
+            const postData = {!! json_encode(array_column($eventTable, 'post_average')) !!};
+            const followUpData = {!! json_encode(array_column($eventTable, 'follow_up')) !!};
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Pre-Event', data: preData, backgroundColor: '#e5e7eb', borderRadius: 4, barPercentage: 0.7 },
+                        { label: 'Post-Event', data: postData, backgroundColor: '#02338d', borderRadius: 4, barPercentage: 0.7 },
+                        { label: 'Follow-up', data: followUpData, backgroundColor: '#c99a2e', borderRadius: 4, barPercentage: 0.7 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '600' }, usePointStyle: true, boxWidth: 8 } }, tooltip: { backgroundColor: '#1f2937', padding: 12 } },
+                    scales: { y: { beginAtZero: true, max: 25, ticks: { stepSize: 5 }, grid: { color: '#f3f4f6', drawBorder: false } }, x: { grid: { display: false } } }
+                }
+            });
+        });
+    </script>
+    @endif
 </body>
 </html>

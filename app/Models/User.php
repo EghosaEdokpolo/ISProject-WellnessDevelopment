@@ -2,24 +2,37 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+
     protected $fillable = [
-        'name', 'staff_id', 'password', 'role', 'department',
+        'name', 
+        'staff_id', 
+        'email',        
+        'password', 
+        'role', 
+        'department', 
+        'points_balance'
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-    // POINTER: these two little helper methods let your Blade views say
-    // @if($user->isHrCoordinator()) instead of @if($user->role === 'hr_coordinator')
-    // everywhere — much easier to read, and if the role logic ever gets more
-    // complex (e.g. multiple HR roles) you only change it in one place.
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
     public function isHrCoordinator(): bool
     {
         return $this->role === 'hr_coordinator';
@@ -30,21 +43,17 @@ class User extends Authenticatable
         return $this->role === 'staff';
     }
 
-    // POINTER: hasMany() tells Eloquent (Laravel's ORM) that ONE user can have
-    // MANY registrations. Laravel infers it's looking for a `user_id` column
-    // on the registrations table because of the naming convention — that's
-    // why the foreignId() in the migration was named user_id.
-    public function registrations(): HasMany
+    public function registrations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Registration::class);
     }
 
-    public function eventsCreated(): HasMany
+    public function eventsCreated(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Event::class, 'created_by');
     }
 
-    public function pointsTransactions(): HasMany
+    public function pointsTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(PointsTransaction::class);
     }

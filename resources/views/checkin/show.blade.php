@@ -54,6 +54,16 @@
                     Confirm check-in (+20 pts)
                 </button>
             </form>
+
+            <!-- MANUAL FALLBACK UPDATED TO STAFF ID -->
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <p class="text-xs text-gray-500 mb-2">No smartphone? Enter Staff ID manually:</p>
+                <form method="POST" action="{{ route('checkin.manual') }}" class="flex gap-2 justify-center">
+                    @csrf
+                    <input name="staff_id" placeholder="Staff ID (e.g. 000100)" class="border-gray-200 rounded-lg bg-gray-50 text-sm px-3 py-1.5 focus:ring-brand focus:border-brand" required>
+                    <button class="bg-brand text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-blue-800">Check in</button>
+                </form>
+            </div>
         @endif
     </div>
 
@@ -87,34 +97,6 @@
             confirmBtn.disabled = false;
             confirmBtn.classList.remove('bg-wl-indigo/50', 'cursor-not-allowed');
             confirmBtn.classList.add('bg-wl-indigo', 'hover:bg-indigo-600', 'shadow-md');
-        });
-    </script>
-    @endif
-
-    <!-- CONFETTI SCRIPT -->
-    @if(session('status') || $registration->checkIn)
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var duration = 3 * 1000;
-            var animationEnd = Date.now() + duration;
-            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-            function randomInRange(min, max) {
-                return Math.random() * (max - min) + min;
-            }
-
-            var interval = setInterval(function() {
-                var timeLeft = animationEnd - Date.now();
-
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
-                }
-
-                var particleCount = 50 * (timeLeft / duration);
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-            }, 250);
         });
     </script>
     @endif

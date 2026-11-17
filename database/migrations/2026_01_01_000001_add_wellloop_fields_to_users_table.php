@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // enum() restricts the column to only these two values at the DB level
-            $table->enum('role', ['staff', 'hr_coordinator'])->default('staff')->after('employee_id');
+            $table->enum('role', ['staff', 'hr_coordinator'])->default('staff')->after('staff_id');
 
             $table->string('department')->nullable()->after('role');
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -11,51 +13,39 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /** Display the login view. */
     public function create(): View
     {
         return view('auth.loginpage');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Executes the email/staff_id password matching authentication logic
-        $request->authenticate();
+        $request->authenticate();$request->session()->regenerate();
 
-        // Regenerates the session ID to prevent session fixation attacks
-        $request->session()->regenerate();
-
-        // CODE ADDITION: Fetch the logged-in user to check their database role string
         $user = Auth::user();
 
-        // If an HR admin logs in, route them immediately to the HR Overview page route
-        if ($user->role === 'hr_coordinator') {
-            return redirect()->intended(route('dashboard.hr'));
-
+        if ($user->isHrCoordinator()) {
+            return redirect()->route('dashboard.hr');
         }
 
-        // If standard Staff logs in, route them to their personal page layout
-        if ($user->role === 'staff') {
-            return redirect()->intended(route('events.index'));
+        if ($user->isStaff()) {
+            // If staff scanned a QR poster while logged out, resume the QR check-in URL immediately
+            $intended = session()->pull('url.intended');
+            if ($intended && str_contains($intended, '/qr-scan')) {
+                return redirect()->to($intended);
+            }
+
+            return redirect()->route('events.index');
         }
 
-         // Fallback default catch route if no user role explicitly matches
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->route('dashboard');
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
+        $request->session()->invalidate();$request->session()->regenerateToken();
 
         return redirect('/');
     }

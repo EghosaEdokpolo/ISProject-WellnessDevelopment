@@ -1,185 +1,255 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateSettingsRequest;
+use App\Models\CheckIn;
+use App\Models\DataProcessingLog;
 use App\Models\Event;
+use App\Models\PointsTransaction;
 use App\Models\Registration;
 use App\Models\User;
 use App\Models\WellbeingResponse;
-use App\Models\Feedback;
 use App\Services\DepartmentalEngagementService;
+use App\Services\HrDashboardService;
+use App\Services\PointService;
 use App\Services\RetentionService;
 use App\Services\WellnessImpactService;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly HrDashboardService $dashboardService
+    ) {}
+
     public function hrOverview(): View
     {
-        $totalStaff      = User::where('role', 'staff')->count();
-        $registeredStaff = User::where('role', 'staff')->whereHas('registrations')->count();
-
-        $sustainedStaffCount = User::where('role', 'staff')
-            ->whereHas('registrations', fn ($q) => $q->where('status', 'completed'), '>=', 2)
-            ->count();
-
-        $start = RetentionService::academicYearStart();
-        $end   = RetentionService::academicYearEnd();
-
-        $eventsThisAcademicYear = Event::whereBetween('created_at', [$start, $end])->count();
-
-        $avgLift = round(
-            WellbeingResponse::where('stage', 'post')->avg('total_score')
-            - WellbeingResponse::where('stage', 'pre')->avg('total_score'),
-            1
-        );
-
-        $totalPointsEarned = User::where('role', 'staff')->sum('points_balance') ?? 0;
-
-        // ALL 8 SAMHSA WELLNESS DIMENSIONS FOR THE GRAPH
-        
-        // --- 1. REGISTRATION COUNTS ---
-        $regPhysical      = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'physical'))->count();
-        $regMental        = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'mental'))->count();
-        $regFinancial     = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'financial'))->count();
-        $regSocial        = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'social'))->count();
-        $regIntellectual  = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'intellectual'))->count();
-        $regOccupational  = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'occupational'))->count();
-        $regEnvironmental = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'environmental'))->count();
-        $regSpiritual     = Registration::whereBetween('created_at', [$start, $end])->whereHas('event', fn ($q) => $q->where('category', 'spiritual'))->count();
-
-        // --- 2. ATTENDANCE COUNTS (Status check matches your database snippet) ---
-        $attStatuses = ['checked_in', 'completed'];
-        $attPhysical      = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'physical'))->count();
-        $attMental        = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'mental'))->count();
-        $attFinancial     = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'financial'))->count();
-        $attSocial        = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'social'))->count();
-        $attIntellectual  = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'intellectual'))->count();
-        $attOccupational  = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'occupational'))->count();
-        $attEnvironmental = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'environmental'))->count();
-        $attSpiritual     = Registration::whereBetween('created_at', [$start, $end])->whereIn('status', $attStatuses)->whereHas('event', fn ($q) => $q->where('category', 'spiritual'))->count();
-
-        $recentActivities = Registration::with(['user', 'event'])
-            ->latest('updated_at')
-            ->take(5)
-            ->get()
-            ->map(function ($reg) {
-                if ($reg->status === 'completed') {
-                    return ['text' => "<strong>{$reg->user->name}</strong> submitted wellness feedback", 'time' => $reg->updated_at->diffForHumans(), 'marker' => 'marker-green'];
-                }
-                if ($reg->status === 'checked_in') {
-                    return ['text' => "<strong>{$reg->user->name}</strong> checked in via QR code", 'time' => $reg->updated_at->diffForHumans(), 'marker' => 'marker-blue'];
-                }
-                return ['text' => "<strong>{$reg->user->name}</strong> registered for <strong>{$reg->event->name}</strong>", 'time' => $reg->updated_at->diffForHumans(), 'marker' => 'marker-gold'];
-            });
-
-        // NEW STAKEHOLDER FEEDBACK METRICS:
-        $mostAttendedEvent = Registration::with('event')
-            ->selectRaw('event_id, count(*) as total')
-            ->groupBy('event_id')
-            ->orderByDesc('total')
-            ->first();
-
-        $qualitativeFeedback = Feedback::with(['registration.user', 'registration.event'])
-            ->whereNotNull('comments')
-            ->where('comments', '!=', '')
-            ->latest()
-            ->take(5)
-            ->get();
-     
-        //METRIC CARD 2: UPCOMING CONSENT COMPLETION RATE (1-Month Look-Ahead Window)
-            
-            // Get total registrations for events starting in the next 30 days
-            $totalUpcomingRegistrations = Registration::whereHas('event', function ($q) {
-                $q->where('starts_at', '>=', now())
-                ->where('starts_at', '<=', now()->addDays(30));
-            })->count();
-
-            // Count how many of those have a matching row inside the waivers table
-            $completedUpcomingWaivers = Registration::whereHas('event', function ($q) {
-                $q->where('starts_at', '>=', now())
-                ->where('starts_at', '<=', now()->addDays(30));
-            })->whereHas('waiver')->count(); // Looks for the registration_id match automatically!
-
-            // If there are no upcoming registrations, show 100% compliance as a fallback
-            $consentCompletionRate = $totalUpcomingRegistrations 
-                ? round(($completedUpcomingWaivers / $totalUpcomingRegistrations) * 100, 1) 
-                : 0;
-
-        
-        // METRIC 3: SURVEY VELOCITY RATE (1-Month Look-Back Cut-off Window)
-        
-            // Count total feedback forms submitted in the last 30 days
-            $totalRecentFeedback = Feedback::where('created_at', '>=', now()->subDays(30))->count();
-
-            // Count how many were submitted within 24 hours of the event starting
-            $fastFeedbackCount = Feedback::where('created_at', '>=', now()->subDays(30))
-            ->whereHas('registration.event', function ($q) {
-                // Fixed syntax: Uses pure column identifiers without nested parenthetical quotes
-                $q->whereRaw('feedback.created_at <= DATE_ADD(events.starts_at, INTERVAL 1 DAY)');
-                    })->count();
-
-            $surveyVelocityRate = $totalRecentFeedback 
-                ? round(($fastFeedbackCount / $totalRecentFeedback) * 100, 1) 
-                : 0;
-
-        return view('hrview.hrdb_overview', [
-            'registrationRate' => $totalStaff ? round($registeredStaff / $totalStaff * 100, 1) : 0,
-            'sustainedParticipationRate' => $totalStaff ? round($sustainedStaffCount / $totalStaff * 100, 1) : 0,
-            'consentCompletionRate' => $consentCompletionRate,
-            'surveyVelocityRate' => $surveyVelocityRate,
-            'avgLift' => $avgLift ?: 0,
-            'registeredStaff' => $registeredStaff,
-            'totalStaff' => $totalStaff,
-            'totalPointsEarned' => $totalPointsEarned,
-
-            // DYNAMIC BAR CHART PAYLOAD (REGISTERED VALUES)
-            'regPhysical'         => $regPhysical,
-            'regMental'           => $regMental,
-            'regFinancial'        => $regFinancial,
-            'regSocial'           => $regSocial,
-            'regIntellectual'     => $regIntellectual,
-            'regOccupational'     => $regOccupational,
-            'regEnvironmental'    => $regEnvironmental,
-            'regSpiritual'        => $regSpiritual,
-            
-            // DYNAMIC BAR CHART PAYLOAD (ATTENDED VALUES)
-            'attPhysical'         => $attPhysical,
-            'attMental'           => $attMental,
-            'attFinancial'        => $attFinancial,
-            'attSocial'           => $attSocial,
-            'attIntellectual'     => $attIntellectual,
-            'attOccupational'     => $attOccupational,
-            'attEnvironmental'    => $attEnvironmental,
-            'attSpiritual'        => $attSpiritual,
-
-            'eventsThisSemester' => $eventsThisAcademicYear,
-            'recentActivities' => $recentActivities,
-            'mostAttendedEvent' => $mostAttendedEvent,
-            'qualitativeFeedback' => $qualitativeFeedback,
-        ]);
+        return view('hrview.hrdb_overview', $this->dashboardService->getOverviewData());
     }
 
-    public function rewards()
+    public function attendees(Request $request): View
+    {
+        $registrations = $this->dashboardService->getAttendees($request);
+        $events = Event::orderByDesc('starts_at')->get();
+        $staffUsers = User::where('role', 'staff')->orderBy('name')->get();
+
+        return view('hrview.hrdb_attendeetable', compact('registrations', 'events', 'staffUsers'));
+    }
+
+    public function logHistoricalAttendance(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'event_id'  => ['required', 'exists:events,id'],
+            'user_id'   => ['required', 'exists:users,id'],
+            'who5_pre'  => ['nullable', 'integer', 'between:0,25'],
+            'who5_post' => ['nullable', 'integer', 'between:0,25'],
+            'award_pts' => ['nullable', 'boolean'],
+        ]);
+
+        $event = Event::findOrFail($data['event_id']);
+        $user  = User::findOrFail($data['user_id']);
+
+        $hasPost = isset($data['who5_post']) && $data['who5_post'] !== null;
+        $status  = $hasPost ? 'completed' : 'checked_in';
+
+        DB::transaction(function () use ($request, $data, $event, $user, $hasPost, $status): void {
+            $registration = Registration::updateOrCreate(
+                ['user_id' => $user->id, 'event_id' => $event->id],
+                ['status' => $status, 'consent_given' => true]
+            );
+
+            CheckIn::firstOrCreate(
+                ['registration_id' => $registration->id],
+                ['checked_in_at' => $event->starts_at ?? now(), 'method' => 'hr_retroactive']
+            );
+
+            if (isset($data['who5_pre']) && $data['who5_pre'] !== null) {
+                $preTotal = (int) $data['who5_pre'];
+                $base = intdiv($preTotal, 5);
+                $rem  = $preTotal % 5;
+
+                WellbeingResponse::updateOrCreate(
+                    ['registration_id' => $registration->id, 'stage' => 'pre'],
+                    [
+                        'item_cheerful'   => $base + ($rem > 0 ? 1 : 0),
+                        'item_calm'       => $base + ($rem > 1 ? 1 : 0),
+                        'item_active'     => $base + ($rem > 2 ? 1 : 0),
+                        'item_rested'     => $base + ($rem > 3 ? 1 : 0),
+                        'item_interested' => $base,
+                        'total_score'     => $preTotal,
+                    ]
+                );
+            }
+
+            if ($hasPost) {
+                $postTotal = (int) $data['who5_post'];
+                $base = intdiv($postTotal, 5);
+                $rem  = $postTotal % 5;
+
+                WellbeingResponse::updateOrCreate(
+                    ['registration_id' => $registration->id, 'stage' => 'post'],
+                    [
+                        'item_cheerful'   => $base + ($rem > 0 ? 1 : 0),
+                        'item_calm'       => $base + ($rem > 1 ? 1 : 0),
+                        'item_active'     => $base + ($rem > 2 ? 1 : 0),
+                        'item_rested'     => $base + ($rem > 3 ? 1 : 0),
+                        'item_interested' => $base,
+                        'total_score'     => $postTotal,
+                    ]
+                );
+            }
+
+            if ($request->boolean('award_pts', true)) {
+                $checkinPts = (int) ($event->points_checkin ?? 20);
+                if (!PointsTransaction::where('registration_id', $registration->id)->where('reason', 'attended_event')->exists()) {
+                    PointsTransaction::create([
+                        'user_id'         => $user->id,
+                        'registration_id' => $registration->id,
+                        'reason'          => 'attended_event',
+                        'points'          => $checkinPts,
+                    ]);
+                    $user->increment('points_balance', $checkinPts);
+                }
+            }
+        });
+
+        Cache::forget('hr_overview_data_v21');
+        Cache::forget('hr_impact_data_v6_');
+        Cache::forget('hr_impact_data_v6_' . $event->category);
+
+        return redirect()->route('attendees.index')
+            ->with('success', "Historical attendance logged for {$user->name} ({$event->name}).");
+    }
+
+    public function rewards(): View
     {
         $me = auth()->user();
-        $leaderboard = User::where('role', 'staff')->where('department', $me->department)->orderByDesc('points_balance')->limit(10)->get();
-        return view('dashboard.rewards', compact('me', 'leaderboard'));
+        $leaderboard = User::where('role', 'staff')
+            ->where('department', $me->department)
+            ->orderByDesc('points_balance')
+            ->limit(10)
+            ->get();
+
+        // Use cumulative earned points for Appraisal Tier standing so redeeming rewards doesn't demote staff
+        $cumulativeEarned = (int) PointsTransaction::where('user_id', $me->id)
+            ->where('points', '>', 0)
+            ->sum('points');
+        $tierPoints = max((int) $me->points_balance, $cumulativeEarned);
+
+        if ($tierPoints >= 200) {
+            $tier = 'Gold';
+            $nextTier = 'Max Level';
+            $progress = 100;
+            $tierColor = 'text-amber-800 bg-amber-100 border-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.5)]';
+            $tierIcon = '👑';
+        } elseif ($tierPoints >= 100) {
+            $tier = 'Silver';
+            $nextTier = 'Gold';
+            $progress = (int) min(100, round((($tierPoints - 100) / 100) * 100));
+            $tierColor = 'text-slate-700 bg-slate-200 border-slate-300 shadow-[0_0_10px_rgba(203,213,225,0.5)]';
+            $tierIcon = '⭐';
+        } else {
+            $tier = 'Bronze';
+            $nextTier = 'Silver';
+            $progress = (int) min(100, round(($tierPoints / 100) * 100));
+            $tierColor = 'text-orange-800 bg-orange-100 border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.3)]';
+            $tierIcon = '🔥';
+        }
+
+        return view('dashboard.rewards', compact(
+            'me',
+            'leaderboard',
+            'tier',
+            'nextTier',
+            'progress',
+            'tierColor',
+            'tierIcon',
+            'tierPoints'
+        ));
     }
 
-    public function attendees()
+    public function redeemReward(Request $request): RedirectResponse
     {
-        $registrations = Registration::with(['user', 'event', 'waiver', 'checkIn', 'feedback', 'wellbeingResponses'])->latest()->get();
-        return view('hrview.hrdb_attendeetable', compact('registrations'));
+        $data = $request->validate([
+            'reward_title' => ['required', 'string', 'max:120'],
+            'cost'         => ['required', 'integer', 'min:1'],
+        ]);
+
+        $user = $request->user();
+        $cost = (int) $data['cost'];
+
+        if ((int) $user->points_balance < $cost) {
+            return redirect()->route('rewards.index')->with('error', 'Insufficient wellness points balance for this reward.');
+        }
+
+        DB::transaction(function () use ($user, $data, $cost): void {
+            PointsTransaction::create([
+                'user_id'         => $user->id,
+                'registration_id' => null,
+                'reason'          => 'redeemed_' . str($data['reward_title'])->slug('_'),
+                'points'          => -$cost,
+            ]);
+
+            $user->decrement('points_balance', $cost);
+
+            DataProcessingLog::record('reward_redeemed', [
+                'user_id'      => $user->id,
+                'staff_name'   => $user->name,
+                'department'   => $user->department,
+                'reward_title' => $data['reward_title'],
+                'cost'         => $cost,
+            ]);
+        });
+
+        Cache::forget('hr_overview_data_v21');
+
+        return redirect()->route('rewards.index')
+            ->with('success', "Redemption submitted for \"{$data['reward_title']}\" (-{$cost} pts). People & Culture has been notified.");
     }
 
-    public function eventmanagement()
+    public function eventmanagement(): View
     {
-        $events = Event::with('createdBy')->orderByDesc('starts_at')->get();
+        $events = Event::with('createdBy')
+            ->withCount('registrations')
+            ->orderByDesc('starts_at')
+            ->get();
+
         return view('hrview.hrdb_eventsmanagement', compact('events'));
     }
 
+    public function impactAnalytics(WellnessImpactService $service): View
+    {
+        $data = Cache::remember('hr_impact_data_v6_' . request('category'), 300, function () use ($service) {
+            $category = request('category');
+            $categoriesData = $service->categoryBreakdown($category);
+            $highestDim = null;
+            $lowestDim = null;
+
+            if ($category === null && count($categoriesData) > 0) {
+                $sorted = collect($categoriesData)->sortByDesc('avg_lift');
+                $highestDim = $sorted->keys()->first();
+                $lowestDim  = $sorted->keys()->last();
+            }
+
+            return [
+                'categories'     => $categoriesData,
+                'eventTable'     => $service->eventTable($category),
+                'activeCategory' => $category,
+                'highestDim'     => $highestDim,
+                'lowestDim'      => $lowestDim,
+            ];
+        });
+
+        return view('hrview.hrdb_impact', $data);
+    }
 
     public function retentionMetrics(RetentionService $service): View
     {
@@ -191,49 +261,78 @@ class DashboardController extends Controller
         return view('hrview.hrdb_departmental', ['ranking' => $service->ranking()]);
     }
 
-    // public function settings()
-    // {
-    //     return view('hrview.hrdb_settings', ['user' => auth()->user()]);
-    // }
+    public function settings(): View
+    {
+        $month = (int) date('n');
+        $year  = (int) date('Y');
 
-    public function updateSettings(Request $request)
+        $cycleStart = $month >= 9 ? $year : $year - 1;
+        $cycleEnd   = $cycleStart + 1;
+
+        $windowStart = Carbon::create($cycleStart, 9, 1)->startOfDay();
+        $windowEnd   = Carbon::create($cycleEnd, 8, 31)->endOfDay();
+
+        $totalActivePoints = (int) PointsTransaction::whereBetween('created_at', [$windowStart, $windowEnd])
+            ->sum('points');
+
+        $points = [
+            'current_academic_year' => "{$cycleStart}/{$cycleEnd}",
+            'next_reset'            => "31 Aug {$cycleEnd}",
+            'total_active_points'   => $totalActivePoints,
+        ];
+
+        $activeStaffCount = User::where('role', 'staff')->count();
+
+        return view('hrview.hrdb_settings', [
+            'user'             => auth()->user(),
+            'cycleStart'       => $cycleStart,
+            'cycleEnd'         => $cycleEnd,
+            'points'           => $points,
+            'activeStaffCount' => $activeStaffCount,
+        ]);
+    }
+
+    public function updateSettings(UpdateSettingsRequest $request): RedirectResponse
     {
         $user = auth()->user();
-        $request->validate(['name' => 'required|string|max:255', 'password' => 'nullable|string|min:8|confirmed']);
-        $user->name = $request->name;
-        if ($request->filled('password')) { $user->password = bcrypt($request->password); }
+        $user->name = $request->validated('name');
+
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->validated('password'));
+        }
+
         $user->save();
+
+        Cache::forget('hr_overview_data_v21');
+        Cache::forget('hr_overview_data_v8');
+        Cache::forget('hr_impact_data_v6_');
+
         return redirect()->back()->with('success', 'Settings updated successfully!');
     }
 
-
-  
-    //qualitative feedback logs controller method
-    public function feedbackLogs(Request $request)
+    public function resetPoints(Request $request, PointService $pointService): RedirectResponse
     {
-        // 1. Fetch all events from the database to populate our filter dropdown menu
-        $events = Event::orderByDesc('starts_at')->get();
+        $request->validate([
+            'confirmation' => ['required', 'string', 'in:RESET,reset'],
+        ], [
+            'confirmation.in' => 'You must type RESET in the confirmation box to zero staff point balances.',
+        ]);
 
-        // 2. Check if the user selected a specific event from the dropdown filter
-        $selectedEventId = $request->input('event_id');
+        $count = $pointService->resetAll();
 
-        // 3. Build a dynamic Eloquent database query. start by looking at all feedback entries that contain written text comments
-        $query = Feedback::with(['registration.user', 'registration.event'])
-            ->whereNotNull('comments')
-            ->where('comments', '!=', '');
+        $month = (int) date('n');
+        $year  = (int) date('Y');
+        $cycleStart = $month >= 9 ? $year : $year - 1;
+        $cycleEnd   = $cycleStart + 1;
 
-        // 4. THE STEP-BY-STEP FILTER LOGIC:
-        if ($selectedEventId) {
-            $query->whereHas('registration', function ($q) use ($selectedEventId) {
-                $q->where('event_id', $selectedEventId);
-            });
-        }
+        DataProcessingLog::record('points_reset', [
+            'users_affected' => $count,
+            'academic_year'  => "{$cycleStart}/{$cycleEnd}",
+        ]);
 
-        // 5. Execute the query and sort by the newest feedback entries first
-        $allFeedback = $query->latest()->get();
+        Cache::forget('hr_overview_data_v21');
+        Cache::forget('hr_overview_data_v8');
 
-        // 6. Return the clean view layout file and inject our data variables into it
-        return view('hrview.hrdb_feedback_logs', compact('events', 'allFeedback', 'selectedEventId'));
+        return redirect()->back()->with('success', "Successfully reset points for {$count} staff members.");
     }
-
 }

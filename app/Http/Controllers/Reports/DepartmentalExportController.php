@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
@@ -14,14 +16,27 @@ class DepartmentalExportController extends Controller
         DataProcessingLog::record('departmental_export');
         $ranking = $service->ranking();
 
-        $csv = "Department,Code,Total Staff,Unique Attendees,Engagement Rate,Status\n";
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, ['Department', 'Code', 'Total Staff', 'Unique Attendees', 'Engagement Rate (%)', 'Status']);
+
         foreach ($ranking['all_departments'] as $row) {
-            $csv .= sprintf("%s,%s,%d,%d,%.1f,%s\n", $row['department'], $row['code'], $row['total_staff'], $row['unique_attendees'], $row['engagement_rate'], $row['status']);
+            fputcsv($stream, [
+                $row['department'],
+                $row['code'],
+                (int) $row['total_staff'],
+                (int) $row['unique_attendees'],
+                number_format((float) $row['engagement_rate'], 1),
+                ucfirst((string) $row['status']),
+            ]);
         }
 
+        rewind($stream);
+        $csv = stream_get_contents($stream) ?: '';
+        fclose($stream);
+
         return response($csv, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="departmental-engagement.csv"',
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="Strathmore-Departmental-Engagement-' . date('Y-m-d') . '.csv"',
         ]);
     }
 }

@@ -1,25 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Event extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'name', 'category', 'description', 'starts_at', 'location', 'capacity', 'created_by', 'points_checkin', 'points_feedback', 'comlink',
+        'name',
+        'category',
+        'starts_at',
+        'location',
+        'capacity',
+        'description',
+        'comlink',
+        'points_checkin',
+        'points_feedback',
+        'created_by',
     ];
 
-    // POINTER: casts() tells Eloquent to automatically convert this database
-    // column into a real PHP Carbon date object whenever you read it, and back
-    // into a proper datetime string whenever you save it. Without this,
-    // $event->starts_at would just be a plain string.
-    protected function casts(): array
-    {
-        return ['starts_at' => 'datetime'];
-    }
+    protected $casts = [
+        'starts_at' => 'datetime',
+    ];
 
     public function registrations(): HasMany
     {
@@ -31,31 +41,36 @@ class Event extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // POINTER: an "accessor" — lets you write $event->spots_remaining in a
-    // Blade view like it's a normal column, but it's actually calculated
-    // live from capacity minus how many people have registered.
-    public function getSpotsRemainingAttribute(): int
+    public function pointsTransactions(): HasManyThrough
     {
-        return max(0, $this->capacity - $this->registrations()->count());
+        return $this->hasManyThrough(
+            PointsTransaction::class,
+            Registration::class,
+            'event_id',        // FK on registrations
+            'registration_id', // FK on points_transactions
+            'id',              // PK on events
+            'id'               // PK on registrations
+        );
     }
 
-    // Tailwind class per category, used to colour the pastel badges in Blade
-    // (kept here so every view stays consistent — one source of truth)
+    public function getSpotsRemainingAttribute(): int
+    {
+        $registered = $this->registrations_count ?? $this->registrations()->count();
+        return max(0, $this->capacity - $registered);
+    }
+
     public function getCategoryColorAttribute(): string
     {
-        return match ($this->category) {
-            'physical' => 'bg-wl-lavender text-wl-indigo',
-            'mental' => 'bg-wl-mint text-emerald-700',
-            'financial' => 'bg-wl-cream text-amber-700',
-            'social' => 'bg-wl-lilac text-purple-700',
-          'occupational'  => 'bg-blue-50 text-blue-700',       
-            'intellectual'  => 'bg-orange-50 text-orange-700',   
-            'spiritual'     => 'bg-rose-50 text-rose-700',       
-            'environmental' => 'bg-teal-50 text-teal-700',       
-            
-            // Safe fallback catcher if a category name string mismatch occurs
+        return match (strtolower($this->category ?? '')) {
+            'physical'      => 'bg-blue-100 text-blue-700',
+            'mental'        => 'bg-purple-100 text-purple-700',
+            'financial'     => 'bg-emerald-100 text-emerald-700',
+            'social'        => 'bg-amber-100 text-amber-700',
+            'occupational'  => 'bg-slate-100 text-slate-700',
+            'intellectual'  => 'bg-indigo-100 text-indigo-700',
+            'spiritual'     => 'bg-rose-100 text-rose-700',
+            'environmental' => 'bg-teal-100 text-teal-700',
             default         => 'bg-gray-100 text-gray-700',
-
         };
     }
 }

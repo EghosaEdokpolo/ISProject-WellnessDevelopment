@@ -2,114 +2,154 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Departmental Engagement Growth</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departmental Analysis | Strathmore University</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
-    @vite(['resources/css/hr_view_style.css', 'resources/css/HR_departmental.css', 'resources/js/app.js'])
-    <style>
-        
+    
+    <link href="https://fonts.cdnfonts.com/css/sansation" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    colors: { brand: '#02338d', 'brand-light': '#e8f0fe', wl: { gold: '#c99a2e' } },
+                    fontFamily: { sans: ['Sansation', 'sans-serif'] }
+                } 
+            } 
+        }
+    </script>
+    <style> 
+        body, h1, h2, h3, h4, h5, h6, p, div, span, a, button, input, select, textarea, table, th, td { 
+            font-family: 'Sansation', sans-serif !important; 
+        } 
+        body { background-color: #f8fafc; }
     </style>
 </head>
 <body>
-    <div class="header-title"><img src="{{ asset('assets/Strathmore_uni_logo-notext.png') }}"> WPMIS — WELLNESS PROGRAMME MANAGEMENT & IMPACT SYSTEM</div>
-    <header class="nav-head"><nav class="nav-menu">
-        <div class="pillgroup1"><span class="category-label">Dashboards</span>
-            <a href="{{ route('dashboard.hr') }}" class="nav-link"><img src="{{ asset('images/analytics-icon.png') }}" class="nav-icon"> Overview</a>
-            <a href="{{ route('impact.analytics') }}" class="nav-link"><img src="{{ asset('images/Impact-icon.png') }}" class="nav-icon"> Impact</a>
-            <a href="{{ route('retention.metrics') }}" class="nav-link"><img src="{{ asset('images/retention-icon1.png') }}" class="nav-icon"> Retention</a>
-            <a href="{{ route('department.analysis') }}" class="nav-link active"><img src="{{ asset('images/department-icon.png') }}" class="nav-icon"> Departmental</a>
-        </div>
-        <a href="{{ route('attendees.index') }}" class="nav-link"><img src="{{ asset('images/attendance-icon.png') }}" class="nav-icon"> Attendees</a>
-        <a href="{{ route('events.management') }}" class="nav-link"><img src="{{ asset('images/events-icon.png') }}" class="nav-icon"> Events</a>
-        <a href="{{ route('settings.edit') }}" class="nav-link"><img src="{{ asset('images/settings-icon.png') }}" class="nav-icon"> Settings</a>
-    </nav></header>
+    <x-hr-nav />
 
-    <div style="padding: 0 4%; margin-bottom: 20px;">
-        <h1 style="margin-bottom: 5px;">Departmental Engagement Growth <span style="font-size:12px; background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:12px; vertical-align:middle;">● Lagging</span></h1>
-        <p style="margin-top:0; color:#6b7280; font-size:14px;">Which departments moved from disengaged to engaged across the semester.</p>
-    </div>
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Departmental Engagement</h1>
+                    
+                    <!-- DYNAMIC DEPARTMENTAL BADGE -->
+                    @if($ranking['stats']['org_average'] >= 60)
+                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full uppercase tracking-wider">Highly Engaged</span>
+                    @elseif($ranking['stats']['org_average'] >= 30)
+                        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full uppercase tracking-wider">Moderate</span>
+                    @else
+                        <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full uppercase tracking-wider">Needs Attention</span>
+                    @endif
+                </div>
+                <p class="text-sm text-gray-500">Unique attendees per department / total staff in department.</p>
+            </div>
 
-    <!-- DYNAMIC METRIC CARDS WITH ACADEMIC YEAR LABELS -->
-    <div class="kpi-grid-4">
-        <div class="card">
-            <div class="card-label">DEPARTMENTS TRACKED</div>
-            <div id="metric-tracked" class="metric-value" style="color:#02338d;">{{ count($ranking['all_departments']) }}</div>
-            <div class="metric-sub">of 47 total</div>
-        </div>
-        
-        <div class="card">
-            <div class="card-label">ORG AVG — ACADEMIC YEAR START</div>
-            <div id="metric-start" class="metric-value" style="color:#b91c1c;">{{ $ranking['org_start'] ?? '0%' }}</div>
-            <div class="metric-sub">engagement rate</div>
-        </div>
-        
-        <div class="card">
-            <div class="card-label">ORG AVG — ACADEMIC YEAR END</div>
-            <div id="metric-end" class="metric-value" style="color:#0a7b2b;">{{ $ranking['org_end'] ?? '0%' }}</div>
-            <div class="metric-sub">engagement rate</div>
-        </div>
-        
-        <div class="card">
-            <div class="card-label">ORG-WIDE GROWTH</div>
-            <div id="metric-growth" class="metric-value" style="color:#cca04a;">{{ $ranking['org_growth'] ?? '+30pp' }}</div>
-            <div class="metric-sub">percentage points</div>
-        </div>
-    </div>
-
-    <div class="two-col">
-        <div class="card">
-            <div class="card-label" style="margin-bottom: 15px;">⭐ Most Active — Top 5</div>
-            @forelse($ranking['most_active'] as $i => $d)
-                <div class="list-item"><span><strong style="color:#9ca3af; margin-right:10px;">{{ $i+1 }}</strong> {{ $d['department'] }}</span><span style="font-weight:700;">{{ $d['engagement_rate'] }}%</span></div>
-            @empty
-                <p style="font-size:13px; color:#6b7280;">No data yet.</p>
-            @endforelse
-        </div>
-        <div class="card">
-            <div class="card-label" style="margin-bottom: 15px;">⚠️ Needs Attention — Bottom 5</div>
-            @forelse($ranking['needs_attention'] as $i => $d)
-                <div class="list-item"><span><strong style="color:#9ca3af; margin-right:10px;">{{ $i+1 }}</strong> {{ $d['department'] }}</span><span style="font-weight:700;">{{ $d['engagement_rate'] }}%</span></div>
-            @empty
-                <p style="font-size:13px; color:#6b7280;">No data yet.</p>
-            @endforelse
-        </div>
-    </div>
-
-    <div style="padding: 0 4% 20px; display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; gap:10px;">
-            <button style="padding:8px 16px; border-radius:6px; border:1px solid #d1d5db; background:#fff; color:#4b5563; font-weight:600; font-size:12px;">Ranked Table</button>
+            <a href="{{ route('reports.departmental.export') }}" class="bg-wl-gold text-brand px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-yellow-600 transition flex items-center gap-2 self-start md:self-auto">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Export Departmental CSV
+            </a>
         </div>
 
-        <!-- EXPORT BUTTONS -->
-        <div style="display:flex; gap:10px;">
-            <a href="{{ route('reports.departmental.export') }}" class="export-btn">⬇ Export CSV</a>
-            <a href="{{ route('reports.pdf.export') }}" class="export-btn" style="background:#b91c1c; color:#fff;">📄 Download PDF</a>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-gray-500 text-sm font-medium">Total Departments</h3>
+                <div class="text-3xl font-extrabold text-gray-900 mt-1">{{ $ranking['stats']['total_departments'] }}</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-gray-500 text-sm font-medium">Org Average</h3>
+                <div class="text-3xl font-extrabold text-brand mt-1">{{ $ranking['stats']['org_average'] }}%</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-gray-500 text-sm font-medium">Engaged Departments</h3>
+                <div class="text-3xl font-extrabold text-emerald-600 mt-1">{{ $ranking['stats']['engaged_count'] }}</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 class="text-gray-500 text-sm font-medium">Needs Attention</h3>
+                <div class="text-3xl font-extrabold text-red-600 mt-1">{{ $ranking['stats']['disengaged_count'] }}</div>
+            </div>
         </div>
-    </div>
 
-    <div style="padding: 0 4% 40px;">
-        <table class="data-table">
-            <thead style="justify-content: flex-end;">
-                <tr>
-                    <th>#</th>
-                    <th>Department</th>
-                    <th>Code</th>
-                    <th>Staff</th>
-                    <th>Attendees</th>
-                    <th>Rate</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($ranking['all_departments'] as $i => $d)
-                    <tr>
-                        <td>{{ $i+1 }}</td><td><strong>{{ $d['department'] }}</strong></td><td>{{ $d['code'] }}</td>
-                        <td>{{ $d['total_staff'] }}</td><td>{{ $d['unique_attendees'] }}</td><td><strong>{{ $d['engagement_rate'] }}%</strong></td>
-                        <td><span style="background: {{ $d['status'] === 'engaged' ? '#dcfce7' : ($d['status'] === 'developing' ? '#fef3c7' : '#fee2e2') }}; color: {{ $d['status'] === 'engaged' ? '#166534' : ($d['status'] === 'developing' ? '#92400e' : '#991b1b') }}; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase;">{{ $d['status'] }}</span></td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Most Active</h2>
+                <div class="space-y-3">
+                    @forelse($ranking['most_active'] as $dept)
+                        <div class="flex items-center justify-between bg-emerald-50 rounded-lg px-4 py-3 border border-emerald-100">
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">{{ $dept['department'] }}</div>
+                                <div class="text-xs text-gray-500">{{ $dept['unique_attendees'] }} of {{ $dept['total_staff'] }} staff</div>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-700 bg-white px-3 py-1 rounded-full">{{ $dept['engagement_rate'] }}%</span>
+                        </div>
+                    @empty
+                        <p class="text-sm text-gray-500">No data yet.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Needs Attention</h2>
+                <div class="space-y-3">
+                    @forelse($ranking['needs_attention'] as $dept)
+                        <div class="flex items-center justify-between bg-red-50 rounded-lg px-4 py-3 border border-red-100">
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">{{ $dept['department'] }}</div>
+                                <div class="text-xs text-gray-500">{{ $dept['unique_attendees'] }} of {{ $dept['total_staff'] }} staff</div>
+                            </div>
+                            <span class="text-xs font-bold text-red-700 bg-white px-3 py-1 rounded-full">{{ $dept['engagement_rate'] }}%</span>
+                        </div>
+                    @empty
+                        <p class="text-sm text-gray-500">No data yet.</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-4">Department</th>
+                            <th class="px-6 py-4">Code</th>
+                            <th class="px-6 py-4 text-center">Staff</th>
+                            <th class="px-6 py-4 text-center">Attendees</th>
+                            <th class="px-6 py-4 text-center">Engagement</th>
+                            <th class="px-6 py-4 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        @forelse($ranking['all_departments'] as $dept)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 font-bold text-gray-900">{{ $dept['department'] }}</td>
+                                <td class="px-6 py-4 text-gray-500">{{ $dept['code'] }}</td>
+                                <td class="px-6 py-4 text-center text-gray-700">{{ $dept['total_staff'] }}</td>
+                                <td class="px-6 py-4 text-center text-gray-700">{{ $dept['unique_attendees'] }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-gray-900">{{ $dept['engagement_rate'] }}%</td>
+                                <td class="px-6 py-4 text-center">
+                                    @if($dept['status'] === 'engaged')
+                                        <span class="inline-flex px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-bold text-xs capitalize">Engaged</span>
+                                    @elseif($dept['status'] === 'developing')
+                                        <span class="inline-flex px-2 py-1 rounded bg-amber-50 text-amber-700 font-bold text-xs capitalize">Developing</span>
+                                    @else
+                                        <span class="inline-flex px-2 py-1 rounded bg-red-50 text-red-700 font-bold text-xs capitalize">Disengaged</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-500">
+                                    No departmental engagement records found yet.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

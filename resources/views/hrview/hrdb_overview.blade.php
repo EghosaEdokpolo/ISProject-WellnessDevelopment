@@ -3,125 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Overview Dashboard | Strathmore University</title>
+    <title>HR Overview Dashboard | Strathmore University WPMIS</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}?v=2">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/sansation" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { brand: '#02338d', 'brand-light': '#e8f0fe', wl: { gold: '#c99a2e' } },
-                    fontFamily: { sans: ['Sansation', 'sans-serif'] }
-                } 
-            } 
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'su-blue': '#02338d',
+                        'su-blue-dark': '#012466',
+                        'su-gold': '#c99a2e',
+                        'su-gold-tint': '#f5eccd',
+                        'su-red': '#e03c31',
+                        'su-black': '#1d1d1b'
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        wordmark: ['Sansation', 'sans-serif']
+                    }
+                }
+            }
         }
     </script>
-    <style> 
-        body, h1, h2, h3, h4, h5, h6, p, div, span, a, button, input, select, textarea, table, th, td { 
-            font-family: 'Sansation', sans-serif !important; 
-        } 
-        body { background-color: #f8fafc; }
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8f9fb;
+            color: #1d1d1b;
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
     <x-hr-nav />
 
-    <main class="max-w-7xl mx-auto px-6 py-8">
-        
-        <div class="mb-8 flex justify-between items-end">
+    <main class="max-w-7xl w-full mx-auto px-6 py-8 flex-1">
+        <div class="mb-8 flex flex-wrap justify-between items-end gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">HR Overview</h1>
-                <p class="text-sm text-gray-500 mt-1">Live analytics for Semester 1, {{ date('Y') }}</p>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-su-gold">People & Culture Analytics</span>
+                <h1 class="text-3xl font-extrabold text-su-black tracking-tight mt-0.5">HR Overview</h1>
+                <p class="text-sm text-su-black/60 mt-1">Live institutional wellness performance for Academic Year {{ date('Y') }}</p>
             </div>
-            <div class="text-xs font-bold text-gray-500 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live Data
+            <div class="text-xs font-extrabold text-su-blue bg-white px-3.5 py-2 rounded-xl border border-su-blue/20 shadow-sm flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-su-blue animate-pulse"></span> Live Data
             </div>
         </div>
 
         <!-- 4 Executive KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- CARD 1: Staff Registration Rate -->
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <div class="bg-white rounded-2xl p-6 border border-su-black/10 shadow-sm">
                 <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-brand-light text-brand rounded-lg">
+                    <div class="p-2.5 bg-su-blue/10 text-su-blue rounded-xl">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </div>
                     @if($registrationRate >= 75)
-                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full uppercase">On Track</span>
+                        <span class="text-[10px] font-extrabold text-su-blue bg-su-blue/10 px-2.5 py-1 rounded-full uppercase">On Track</span>
                     @elseif($registrationRate >= 40)
-                        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full uppercase">Moderate</span>
+                        <span class="text-[10px] font-extrabold text-[#8a6514] bg-su-gold-tint px-2.5 py-1 rounded-full uppercase">Moderate</span>
                     @else
-                        <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full uppercase">Low</span>
+                        <span class="text-[10px] font-extrabold text-su-red bg-su-red/10 px-2.5 py-1 rounded-full uppercase">Low</span>
                     @endif
                 </div>
-                <h3 class="text-gray-500 text-sm font-medium">Registration Rate</h3>
-                <div class="text-3xl font-extrabold text-gray-900 mt-1">{{ $registrationRate }}%</div>
-                <p class="text-xs text-gray-400 mt-2">{{ $registeredStaff }} of {{ $totalStaff }} staff</p>
+                <h3 class="text-su-black/60 text-xs font-bold uppercase tracking-wider">Registration Rate</h3>
+                <div class="text-3xl font-extrabold text-su-black mt-1">{{ $registrationRate }}%</div>
+                <p class="text-xs text-su-black/50 mt-2">{{ $registeredStaff }} of {{ $totalStaff }} staff</p>
             </div>
 
             <!-- CARD 2: Survey Velocity -->
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <div class="bg-white rounded-2xl p-6 border border-su-black/10 shadow-sm">
                 <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                    <div class="p-2.5 bg-su-gold-tint text-[#8a6514] rounded-xl">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     @if($surveyVelocityRate >= 80)
-                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full uppercase">Fast</span>
+                        <span class="text-[10px] font-extrabold text-su-blue bg-su-blue/10 px-2.5 py-1 rounded-full uppercase">Fast</span>
                     @elseif($surveyVelocityRate >= 50)
-                        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full uppercase">Average</span>
+                        <span class="text-[10px] font-extrabold text-[#8a6514] bg-su-gold-tint px-2.5 py-1 rounded-full uppercase">Average</span>
                     @else
-                        <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full uppercase">Slow</span>
+                        <span class="text-[10px] font-extrabold text-su-red bg-su-red/10 px-2.5 py-1 rounded-full uppercase">Slow</span>
                     @endif
                 </div>
-                <h3 class="text-gray-500 text-sm font-medium">Survey Velocity</h3>
-                <div class="text-3xl font-extrabold text-gray-900 mt-1">{{ $surveyVelocityRate }}%</div>
-                <p class="text-xs text-gray-400 mt-2">Submitted within 24h post event</p>
+                <h3 class="text-su-black/60 text-xs font-bold uppercase tracking-wider">Survey Velocity</h3>
+                <div class="text-3xl font-extrabold text-su-black mt-1">{{ $surveyVelocityRate }}%</div>
+                <p class="text-xs text-su-black/50 mt-2">Submitted within 24h post event</p>
             </div>
 
             <!-- CARD 3: Avg WHO-5 Lift -->
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <div class="bg-white rounded-2xl p-6 border border-su-black/10 shadow-sm">
                 <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                    <div class="p-2.5 bg-su-blue/10 text-su-blue rounded-xl">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                     </div>
                     @if($avgLift > 3)
-                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full uppercase">High Impact</span>
+                        <span class="text-[10px] font-extrabold text-su-blue bg-su-blue/10 px-2.5 py-1 rounded-full uppercase">High Impact</span>
                     @elseif($avgLift > 0)
-                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full uppercase">Positive</span>
+                        <span class="text-[10px] font-extrabold text-[#8a6514] bg-su-gold-tint px-2.5 py-1 rounded-full uppercase">Positive</span>
                     @else
-                        <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full uppercase">Needs Review</span>
+                        <span class="text-[10px] font-extrabold text-su-red bg-su-red/10 px-2.5 py-1 rounded-full uppercase">Needs Review</span>
                     @endif
                 </div>
-                <h3 class="text-gray-500 text-sm font-medium">Avg WHO-5 Lift</h3>
-                <div class="text-3xl font-extrabold text-emerald-600 mt-1">+{{ $avgLift }}</div>
-                <p class="text-xs text-gray-400 mt-2">Pre – Post delta</p>
+                <h3 class="text-su-black/60 text-xs font-bold uppercase tracking-wider">Avg WHO-5 Lift</h3>
+                <div class="text-3xl font-extrabold text-su-blue mt-1">+{{ $avgLift }}</div>
+                <p class="text-xs text-su-black/50 mt-2">Pre – Post delta</p>
             </div>
 
             <!-- CARD 4: Total Points -->
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <div class="bg-white rounded-2xl p-6 border border-su-black/10 shadow-sm">
                 <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-amber-50 text-wl-gold rounded-lg">
+                    <div class="p-2.5 bg-su-gold-tint text-su-gold rounded-xl">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full uppercase">Active</span>
+                    <span class="text-[10px] font-extrabold text-su-black/70 bg-su-black/5 px-2.5 py-1 rounded-full uppercase">Active</span>
                 </div>
-                <h3 class="text-gray-500 text-sm font-medium">Total Points</h3>
-                <div class="text-3xl font-extrabold text-gray-900 mt-1">{{ number_format($totalPointsEarned) }}</div>
-                <p class="text-xs text-gray-400 mt-2">Earned across all staff</p>
+                <h3 class="text-su-black/60 text-xs font-bold uppercase tracking-wider">Total Points</h3>
+                <div class="text-3xl font-extrabold text-su-black mt-1">{{ number_format($totalPointsEarned) }}</div>
+                <p class="text-xs text-su-black/50 mt-2">Earned across all staff</p>
             </div>
         </div>
 
         <!-- Participation Chart & Recent Activity -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-su-black/10 shadow-sm p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-bold text-gray-900">Participation by Category</h2>
+                    <h2 class="text-base font-extrabold text-su-black">Participation by Wellness Dimension</h2>
                 </div>
                 <div class="h-72 w-full">
-                    <canvas id="categoryChart" 
+                    <canvas id="categoryChart"
                             data-reg-physical="{{ $regPhysical }}" data-att-physical="{{ $attPhysical }}"
                             data-reg-mental="{{ $regMental }}" data-att-mental="{{ $attMental }}"
                             data-reg-financial="{{ $regFinancial }}" data-att-financial="{{ $attFinancial }}"
@@ -134,82 +145,82 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Recent Activity</h2>
+            <div class="bg-white rounded-2xl border border-su-black/10 shadow-sm p-6 flex flex-col">
+                <h2 class="text-base font-extrabold text-su-black mb-4">Recent Activity</h2>
                 <div class="flex-1 overflow-y-auto pr-2 space-y-4">
                     @forelse($recentActivities as $activity)
                         <div class="flex items-start gap-3">
-                            <div class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 {{ $activity['marker'] === 'marker-green' ? 'bg-emerald-500' : ($activity['marker'] === 'marker-blue' ? 'bg-brand' : 'bg-amber-500') }}"></div>
+                            <div class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0 {{ $activity['marker'] === 'marker-green' ? 'bg-su-blue' : ($activity['marker'] === 'marker-blue' ? 'bg-su-gold' : 'bg-su-red') }}"></div>
                             <div>
-                                <div class="text-sm text-gray-700 leading-snug">{!! $activity['text'] !!}</div>
-                                <div class="text-[11px] font-medium text-gray-400 mt-1">{{ $activity['time'] }}</div>
+                                <div class="text-xs text-su-black/80 leading-snug">{!! $activity['text'] !!}</div>
+                                <div class="text-[11px] font-semibold text-su-black/45 mt-1">{{ $activity['time'] }}</div>
                             </div>
                         </div>
                     @empty
-                        <p class="text-sm text-gray-500">No recent activity.</p>
+                        <p class="text-xs text-su-black/55">No recent activity.</p>
                     @endforelse
                 </div>
             </div>
         </div>
 
-        <!-- Most Highly Attended Event & Qualitative Post-Event Feedback -->
+        <!-- Highly Attended Event & Qualitative Post-Event Feedback -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 relative overflow-hidden flex flex-col justify-center min-h-[200px]">
+            <div class="bg-white rounded-2xl border border-su-black/10 shadow-sm p-6 relative overflow-hidden flex flex-col justify-center min-h-[200px]">
                 <div class="absolute -right-6 -bottom-6 opacity-[0.04] pointer-events-none">
-                    <svg class="w-48 h-48 text-brand" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                    <svg class="w-48 h-48 text-su-blue" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
                 </div>
-                <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 relative z-10 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-wl-gold" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                <h2 class="text-[11px] font-extrabold text-su-black/60 uppercase tracking-wider mb-4 relative z-10 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-su-gold" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                     Most Highly Attended Event
                 </h2>
-                <div class="text-2xl font-extrabold text-gray-900 leading-tight relative z-10">
+                <div class="text-xl font-extrabold text-su-black leading-tight relative z-10">
                     {{ $mostAttendedEvent ? $mostAttendedEvent['name'] : 'No data yet' }}
                 </div>
                 <div class="mt-4 flex flex-wrap gap-2 relative z-10">
                     @if($mostAttendedEvent)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-light text-brand text-xs font-bold border border-brand/10">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-su-blue/10 text-su-blue text-xs font-extrabold border border-su-blue/15">
                             {{ $mostAttendedEvent['total'] }} Staff Attended
                         </span>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-su-gold-tint text-[#8a6514] text-xs font-extrabold">
                             {{ $mostAttendedEvent['registered'] }} Registered
                         </span>
                     @else
-                        <span class="text-sm text-gray-500">—</span>
+                        <span class="text-xs text-su-black/50">—</span>
                     @endif
                 </div>
             </div>
 
-            <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex justify-between items-center">
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-su-black/10 shadow-sm p-6">
+                <h2 class="text-[11px] font-extrabold text-su-black/60 uppercase tracking-wider mb-4 flex justify-between items-center">
                     <span>Qualitative Post-Event Feedback</span>
-                    <a href="{{ route('hr.feedback.logs') }}" class="text-brand hover:underline text-xs">View All Logs →</a>
+                    <a href="{{ route('hr.feedback.logs') }}" class="text-su-blue hover:underline text-xs font-extrabold">View All Logs →</a>
                 </h2>
                 <div class="space-y-3">
                     @forelse($qualitativeFeedback as $fb)
-                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                        <div class="bg-su-black/[0.02] rounded-xl p-4 border border-su-black/10">
                             <div class="flex justify-between items-start gap-2">
-                                <p class="text-sm text-gray-700 italic">"{{ $fb['comment'] }}"</p>
-                                <span class="text-xs font-bold text-wl-gold shrink-0">{{ str_repeat('★', $fb['rating'] ?? 5) }}</span>
+                                <p class="text-xs text-su-black/85 italic leading-relaxed">"{{ $fb['comment'] }}"</p>
+                                <span class="text-xs font-extrabold text-su-gold shrink-0">{{ str_repeat('★', $fb['rating'] ?? 5) }}</span>
                             </div>
-                            <div class="text-xs text-gray-400 mt-2">— <span class="font-semibold text-gray-600">{{ $fb['user_name'] }}</span> at {{ $fb['event_name'] }}</div>
+                            <div class="text-[11px] text-su-black/55 mt-2">— <span class="font-bold text-su-black">{{ $fb['user_name'] }}</span> at {{ $fb['event_name'] }}</div>
                         </div>
                     @empty
-                        <p class="text-sm text-gray-500">No written feedback submitted yet.</p>
+                        <p class="text-xs text-su-black/55">No written feedback submitted yet.</p>
                     @endforelse
                 </div>
             </div>
         </div>
 
         <!-- Per-Event Registration Rate, Attendance & Total Points Table -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-900">Registration Rate, Attendance & Points by Event</h2>
-                <a href="{{ route('events.management') }}" class="text-xs font-bold text-brand hover:underline">Manage All Events →</a>
+        <div class="bg-white rounded-2xl border border-su-black/10 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-su-black/10 flex justify-between items-center">
+                <h2 class="text-base font-extrabold text-su-black">Registration Rate, Attendance & Points by Event</h2>
+                <a href="{{ route('events.management') }}" class="text-xs font-extrabold text-su-blue hover:underline">Manage All Events →</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <tr class="bg-su-blue text-white text-[11px] font-bold uppercase tracking-wider">
                             <th class="px-6 py-4">Event Name</th>
                             <th class="px-6 py-4 text-center">Registered</th>
                             <th class="px-6 py-4 text-center">Reg. Rate</th>
@@ -217,25 +228,25 @@
                             <th class="px-6 py-4 text-center">Total Event Points</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm">
+                    <tbody class="divide-y divide-su-black/10 text-xs">
                         @forelse($eventsBreakdown as $event)
-                            <tr class="hover:bg-gray-50 transition-colors">
+                            <tr class="hover:bg-su-blue/[0.02] transition-colors">
                                 <td class="px-6 py-4">
-                                    <span class="font-bold text-gray-900 block">{{ $event->name }}</span>
-                                    <span class="text-[11px] font-semibold text-gray-400 uppercase">{{ $event->category }}</span>
+                                    <span class="font-bold text-su-black block">{{ $event->name }}</span>
+                                    <span class="text-[10px] font-extrabold text-su-gold uppercase">{{ $event->category }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center font-semibold text-gray-700">{{ $event->total_registered }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-su-black/80">{{ $event->total_registered }}</td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-light text-brand">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-su-blue/10 text-su-blue">
                                         {{ $event->registration_rate }}%
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-center text-emerald-600 font-bold">{{ $event->total_attended }}</td>
-                                <td class="px-6 py-4 text-center font-bold text-brand">{{ number_format((int) ($event->points_transactions_sum_points ?? 0)) }} pts</td>
+                                <td class="px-6 py-4 text-center text-su-blue font-extrabold">{{ $event->total_attended }}</td>
+                                <td class="px-6 py-4 text-center font-extrabold text-su-black">{{ number_format((int) ($event->points_transactions_sum_points ?? 0)) }} pts</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">No events found.</td>
+                                <td colspan="5" class="px-6 py-8 text-center text-su-black/55">No events found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -244,22 +255,36 @@
         </div>
     </main>
 
+    <footer class="border-t border-su-black/10 bg-white mt-12">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-su-black/60">
+            <div class="flex items-center gap-2">
+                <span class="font-wordmark font-bold text-su-black text-sm">Strathmore</span>
+                <span class="font-wordmark tracking-widest uppercase text-[11px] text-su-black/75">University</span>
+                <span class="text-su-black/30">|</span>
+                <span class="italic text-[11px]">Ut omnes unum sint</span>
+            </div>
+            <div class="text-[11px]">
+                Wellness Performance Management Information System • Ole Sangale Road, Madaraka Estate, Nairobi
+            </div>
+        </div>
+    </footer>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const canvas = document.getElementById('categoryChart');
             const ctx = canvas.getContext('2d');
-            
+
             const labels = ['Physical', 'Mental', 'Financial', 'Social', 'Intellectual', 'Occupational', 'Environmental', 'Spiritual'];
-            
+
             const regData = [
-                parseInt(canvas.dataset.regPhysical || '0', 10), parseInt(canvas.dataset.regMental || '0', 10), 
+                parseInt(canvas.dataset.regPhysical || '0', 10), parseInt(canvas.dataset.regMental || '0', 10),
                 parseInt(canvas.dataset.regFinancial || '0', 10), parseInt(canvas.dataset.regSocial || '0', 10),
                 parseInt(canvas.dataset.regIntellectual || '0', 10), parseInt(canvas.dataset.regOccupational || '0', 10),
                 parseInt(canvas.dataset.regEnvironmental || '0', 10), parseInt(canvas.dataset.regSpiritual || '0', 10)
             ];
-            
+
             const attData = [
-                parseInt(canvas.dataset.attPhysical || '0', 10), parseInt(canvas.dataset.attMental || '0', 10), 
+                parseInt(canvas.dataset.attPhysical || '0', 10), parseInt(canvas.dataset.attMental || '0', 10),
                 parseInt(canvas.dataset.attFinancial || '0', 10), parseInt(canvas.dataset.attSocial || '0', 10),
                 parseInt(canvas.dataset.attIntellectual || '0', 10), parseInt(canvas.dataset.attOccupational || '0', 10),
                 parseInt(canvas.dataset.attEnvironmental || '0', 10), parseInt(canvas.dataset.attSpiritual || '0', 10)
@@ -270,20 +295,23 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Registered', data: regData, backgroundColor: '#cbd5e1', borderRadius: 4, barPercentage: 0.6 },
+                        { label: 'Registered', data: regData, backgroundColor: '#c99a2e', borderRadius: 4, barPercentage: 0.6 },
                         { label: 'Attended', data: attData, backgroundColor: '#02338d', borderRadius: 4, barPercentage: 0.6 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { font: { family: 'Sansation', weight: '600' }, usePointStyle: true, boxWidth: 8 } },
-                        tooltip: { backgroundColor: '#01225e', padding: 12 }
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Montserrat', weight: '600' }, usePointStyle: true, boxWidth: 8 }
+                        },
+                        tooltip: { backgroundColor: '#1d1d1b', padding: 12 }
                     },
                     scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: '#f3f4f6', drawBorder: false } },
-                        x: { grid: { display: false }, ticks: { font: { family: 'Sansation', weight: '600' } } }
+                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: '#eef0f4', drawBorder: false } },
+                        x: { grid: { display: false }, ticks: { font: { family: 'Montserrat', weight: '600' } } }
                     }
                 }
             });

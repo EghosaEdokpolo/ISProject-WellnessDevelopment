@@ -1,124 +1,201 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-md mx-auto px-6 py-10">
+@php
+    $tz           = $tz ?? (string) config('wellloop.timezone', 'Africa/Nairobi');
+    $eventStart   = $event->starts_at->copy()->shiftTimezone($tz);
+    $capacity     = max(1, (int) ($event->capacity ?? 80));
+    $pct          = min(100, (int) round(($checkedInCount / $capacity) * 100));
+    $gateStatus   = $gate['status'] ?? 'locked';
+    $rows         = $registrations ?? collect();
+@endphp
 
-    <div class="mb-4">
-        <a href="{{ route('checkin.index') }}" class="text-xs font-bold text-slate-500 hover:text-brand inline-flex items-center gap-1">
-            ← Back to Check-In Hub
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+    .su-brand-scope, .su-brand-scope * {
+        font-family: 'Montserrat', sans-serif;
+    }
+</style>
+
+<div class="su-brand-scope max-w-6xl mx-auto space-y-6">
+
+    <!-- Top Navigation & Live EAT Clock -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <a href="{{ route('events.management') }}"
+           class="text-xs font-extrabold text-[#02338d] hover:underline inline-flex items-center gap-1.5">
+            ← Back to Event Management
         </a>
+
+        <div class="flex items-center gap-2 bg-white border border-slate-200 px-3.5 py-2 rounded-xl shadow-sm text-xs font-bold text-slate-700">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="live-eat-clock">{{ now($tz)->format('D, d M Y • H:i:s') }} EAT</span>
+        </div>
     </div>
 
-    @if(session('confirmed'))
-        @php $confirmed = session('confirmed'); @endphp
-        <div class="bg-white rounded-3xl border border-emerald-200 shadow-xl p-8 text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
-            <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <h1 class="text-2xl font-extrabold text-slate-900 mb-2">
-                {{ $confirmed['already_checked_in'] ? 'Already Checked In' : 'Check-In Successful!' }}
-            </h1>
-            <p class="text-slate-500 mb-6">Welcome, <strong class="text-slate-800">{{ $confirmed['name'] }}</strong></p>
+    <!-- Session Header Banner -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="h-1.5 bg-gradient-to-r from-[#02338d] via-[#02338d] to-[#c99a2e]"></div>
+        <div class="p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#02338d] bg-[#e8f0fe] px-3 py-1 rounded-full">
+                        {{ strtoupper($event->category) }} • Session Attendance Monitor
+                    </span>
 
-            @if(!$confirmed['already_checked_in'])
-                <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 mb-6">
-                    <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Points Awarded</p>
-                    <p class="text-3xl font-extrabold text-emerald-600">+{{ $confirmed['points'] }} Points</p>
-                </div>
-            @endif
-
-            <p class="text-sm text-slate-500 mb-6">You are verified for <strong>{{ $confirmed['event'] }}</strong>.</p>
-
-            <div class="space-y-3">
-                @if(isset($myRegistration) && $myRegistration && $myRegistration->status !== 'completed')
-                    <a href="{{ route('feedback.create', $myRegistration) }}" class="block w-full bg-wl-gold text-brand font-bold py-3.5 rounded-xl hover:bg-yellow-500 transition text-sm shadow-sm">
-                        Complete Post-Event WHO-5 Feedback (+{{ $event->points_feedback ?? 10 }} pts)
-                    </a>
-                @endif
-
-                <a href="{{ route('checkin.scan', $event) }}" class="block w-full bg-brand text-white font-bold py-3.5 rounded-xl hover:bg-blue-900 transition text-sm">
-                    Check In Next Staff Member
-                </a>
-            </div>
-        </div>
-    @else
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-8 text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-brand"></div>
-
-            <div class="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mx-auto mb-5">
-                <svg class="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-            </div>
-
-            <h1 class="text-2xl font-bold text-slate-900 mb-1">Venue Check-In</h1>
-            <p class="text-slate-600 text-sm mb-2 font-semibold">{{ $event->name }}</p>
-            <p class="text-xs font-bold text-brand bg-brand-light inline-block px-3 py-1 rounded-full mb-6">
-                {{ $checkedInCount }} / {{ $registeredCount }} Checked In
-            </p>
-
-            @if($errors->any())
-                <div class="mb-6 bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-sm font-bold border border-rose-200 text-left">
-                    {{ $errors->first() }}
-                </div>
-            @endif
-
-            <!-- One-Tap Self Check-In for Logged-In Staff Scanning on Mobile -->
-            @if(isset($myRegistration) && $myRegistration)
-                <div class="mb-6 p-4 rounded-2xl bg-brand-light/70 border border-brand/20 text-left">
-                    <p class="text-[11px] font-bold uppercase tracking-wider text-brand mb-1">Logged in as {{ auth()->user()->name }}</p>
-                    @if($myRegistration->checkIn)
-                        <p class="text-xs text-emerald-700 font-bold mb-3">You are already checked in for this session.</p>
-                        @if($myRegistration->status !== 'completed')
-                            <a href="{{ route('feedback.create', $myRegistration) }}" class="block w-full text-center bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs hover:bg-emerald-700 transition">
-                                Submit Post-Event Feedback (+{{ $event->points_feedback ?? 10 }} pts)
-                            </a>
-                        @endif
-                    @elseif(!$myRegistration->waiver)
-                        <p class="text-xs text-amber-800 mb-3">Sign your event waiver to unlock instant check-in.</p>
-                        <a href="{{ route('registrations.waiver', $myRegistration) }}" class="block w-full text-center bg-amber-500 text-white font-bold py-3 rounded-xl text-xs hover:bg-amber-600 transition">
-                            Sign Mandatory Waiver First
-                        </a>
+                    @if($gateStatus === 'open_on_time')
+                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Gate Open (On Time)
+                        </span>
+                    @elseif($gateStatus === 'late_grace')
+                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                            10-Min Late Grace Active
+                        </span>
+                    @elseif($gateStatus === 'locked')
+                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                            Upcoming • Gate Locked
+                        </span>
                     @else
-                        <p class="text-xs text-slate-600 mb-3">Tap below to confirm your arrival and earn <strong>+{{ $event->points_checkin ?? 20 }} pts</strong>.</p>
-                        <form method="POST" action="{{ route('checkin.confirm', $myRegistration) }}">
-                            @csrf
-                            <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 transition shadow-sm">
-                                One-Tap Self Check-In
-                            </button>
-                        </form>
+                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            Session Concluded • Gate Closed
+                        </span>
                     @endif
                 </div>
 
-                <div class="relative flex py-2 items-center mb-5">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-3 text-[11px] font-bold uppercase text-slate-400">Or Kiosk Staff ID</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-            @elseif(auth()->check() && !auth()->user()->isHrCoordinator())
-                <div class="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left">
-                    <p class="text-xs text-slate-600 mb-2">Not registered for this session yet?</p>
-                    <a href="{{ route('registrations.create', $event) }}" class="inline-block text-xs font-bold text-brand hover:underline">
-                        Register & Sign Waiver Now →
-                    </a>
-                </div>
-            @endif
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ $event->name }}</h1>
+                <p class="text-xs text-slate-500 italic mt-1">
+                    {{ $eventStart->format('l, d M Y \a\t H:i') }} EAT • {{ $event->location }}
+                </p>
+            </div>
 
-            <!-- Venue Kiosk / Manual Staff ID Entry -->
-            <form method="POST" action="{{ route('checkin.manual') }}" class="text-left">
-                @csrf
-                <input type="hidden" name="event_id" value="{{ $event->id }}">
-                <div class="mb-5">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Enter Staff ID</label>
-                    <input type="text" name="staff_id" required placeholder="e.g., SU1234" value="{{ old('staff_id') }}"
-                           class="w-full border border-slate-300 rounded-xl text-lg p-3.5 bg-slate-50 focus:ring-brand focus:border-brand font-bold text-center tracking-widest">
+            <!-- KPI Metrics -->
+            <div class="grid grid-cols-3 gap-3 shrink-0">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-center">
+                    <span class="block text-[10px] font-extrabold uppercase text-slate-400">Registered</span>
+                    <span class="text-xl font-extrabold text-slate-900">{{ $registeredCount }}</span>
                 </div>
-                <button type="submit" class="w-full bg-brand text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-blue-900 transition text-base flex items-center justify-center gap-2">
-                    Confirm Attendance
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </button>
-            </form>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 text-center">
+                    <span class="block text-[10px] font-extrabold uppercase text-emerald-700">Checked In</span>
+                    <span class="text-xl font-extrabold text-emerald-800">{{ $checkedInCount }}</span>
+                </div>
+                <div class="bg-[#e8f0fe] border border-blue-200 rounded-2xl px-4 py-3 text-center">
+                    <span class="block text-[10px] font-extrabold uppercase text-[#02338d]">Turnout</span>
+                    <span class="text-xl font-extrabold text-[#02338d]">{{ $pct }}%</span>
+                </div>
+            </div>
         </div>
-    @endif
+    </div>
 
+    <!-- Attendee Check-In & WHO-5 Completion Table -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-base font-extrabold text-slate-900">Staff Attendance & WHO-5 Status</h2>
+                <p class="text-xs text-slate-500">Verified gate entries, check-in timestamps (EAT), and Post-WHO completion status.</p>
+            </div>
+
+            @if($gateStatus !== 'closed')
+                <a href="{{ route('events.qr.poster', $event) }}"
+                   target="_blank"
+                   class="text-xs font-extrabold bg-[#c99a2e] hover:bg-yellow-500 text-[#01225e] px-4 py-2.5 rounded-xl shadow-sm transition">
+                    Open Venue QR Poster →
+                </a>
+            @endif
+        </div>
+
+        @if($rows->isEmpty())
+            <div class="p-10 text-center">
+                <p class="text-sm font-extrabold text-slate-700">No registrations recorded for this session.</p>
+                <p class="text-xs text-slate-500 mt-1">Staff registrations and venue QR scans will appear here automatically.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                            <th class="py-3.5 px-6">Staff Member</th>
+                            <th class="py-3.5 px-4">Staff ID</th>
+                            <th class="py-3.5 px-4">Check-In Status</th>
+                            <th class="py-3.5 px-4">Verified At (EAT)</th>
+                            <th class="py-3.5 px-6 text-right">Post-WHO Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        @foreach($rows as $reg)
+                            @php
+                                $attendee   = $reg->user;
+                                $checkedIn  = $reg->checkIn !== null;
+                                $postDone   = $reg->status === 'completed' || $reg->feedback !== null;
+                            @endphp
+                            <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-3.5 px-6 font-extrabold text-slate-900">
+                                    {{ $attendee?->name ?? 'Unknown Staff' }}
+                                    <span class="block text-[11px] font-normal text-slate-400">{{ $attendee?->department ?? 'Strathmore University' }}</span>
+                                </td>
+                                <td class="py-3.5 px-4 font-bold text-slate-700">
+                                    {{ $attendee?->staff_id ?? '—' }}
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    @if($checkedIn)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            Checked In ({{ strtoupper($reg->checkIn->method ?? 'QR') }})
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
+                                            Absent / Not Scanned
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="py-3.5 px-4 font-semibold text-slate-600">
+                                    @if($checkedIn)
+                                        {{ $reg->checkIn->checked_in_at->copy()->shiftTimezone($tz)->format('d M Y, H:i:s') }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="py-3.5 px-6 text-right">
+                                    @if($postDone)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-50 text-[#02338d] border border-blue-200">
+                                            Submitted ✓
+                                        </span>
+                                    @elseif($checkedIn)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                                            Pending
+                                        </span>
+                                    @else
+                                        <span class="text-[11px] text-slate-400">N/A</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clockEl = document.getElementById('live-eat-clock');
+        if (!clockEl) return;
+
+        setInterval(function () {
+            const now = new Date();
+            const formatted = now.toLocaleString('en-GB', {
+                timeZone: 'Africa/Nairobi',
+                weekday: 'short',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replace(',', ' •');
+            clockEl.textContent = formatted + ' EAT';
+        }, 1000);
+    });
+</script>
+@endpush

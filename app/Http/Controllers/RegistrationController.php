@@ -28,10 +28,7 @@ class RegistrationController extends Controller
             $hasPreWho5 = $existing->wellbeingResponses->whereIn('stage', ['pre', 'baseline'])->isNotEmpty();
 
             if ($existing->waiver && $hasPreWho5) {
-                return view('events.registered_next_steps', [
-                    'registration' => $existing->load('event'),
-                    'event'        => $event,
-                ]);
+                return $this->renderNextSteps($existing, $event);
             }
 
             if (! $hasPreWho5) {
@@ -61,10 +58,7 @@ class RegistrationController extends Controller
             ->first();
 
         if ($existing && $existing->waiver && $existing->wellbeingResponses->whereIn('stage', ['pre', 'baseline'])->isNotEmpty()) {
-            return view('events.registered_next_steps', [
-                'registration' => $existing->load('event'),
-                'event'        => $event,
-            ]);
+            return $this->renderNextSteps($existing, $event);
         }
 
         $spotsLeft = $event->spots_remaining ?? max(0, (int) $event->capacity - $event->registrations()->count());
@@ -145,10 +139,7 @@ class RegistrationController extends Controller
             Cache::forget($impactPrefix . $event->category);
         }
 
-        return view('events.registered_next_steps', [
-            'registration' => $registration->fresh(['event', 'waiver', 'wellbeingResponses']),
-            'event'        => $event,
-        ]);
+        return $this->renderNextSteps($registration->fresh(['event', 'waiver', 'wellbeingResponses']), $event);
     }
 
     public function who5Form(Registration $registration): View|RedirectResponse
@@ -165,11 +156,11 @@ class RegistrationController extends Controller
 
         $data = $request->validate(
             [
-                'item_cheerful'   => 'required|integer|between:0,5',
-                'item_calm'       => 'required|integer|between:0,5',
-                'item_active'     => 'required|integer|between:0,5',
-                'item_rested'     => 'required|integer|between:0,5',
-                'item_interested' => 'required|integer|between:0,5',
+                'item_cheerful'   => ['required', 'integer', 'between:0,5'],
+                'item_calm'       => ['required', 'integer', 'between:0,5'],
+                'item_active'     => ['required', 'integer', 'between:0,5'],
+                'item_rested'     => ['required', 'integer', 'between:0,5'],
+                'item_interested' => ['required', 'integer', 'between:0,5'],
             ],
             [
                 '*.required' => 'Warning: All 5 Pre-Event WHO-5 wellbeing items are required before continuing.',
@@ -196,7 +187,7 @@ class RegistrationController extends Controller
     {
         abort_unless(auth()->id() === $registration->user_id, 403);
 
-        $registration->load(['event', 'wellbeingResponses']);
+        $registration->load(['event', 'wellbeingResponses', 'waiver']);
 
         if ($registration->wellbeingResponses->whereIn('stage', ['pre', 'baseline'])->isEmpty()) {
             return redirect()->route('registrations.who5', $registration)
@@ -204,10 +195,7 @@ class RegistrationController extends Controller
         }
 
         if ($registration->waiver) {
-            return view('events.registered_next_steps', [
-                'registration' => $registration,
-                'event'        => $registration->event,
-            ]);
+            return $this->renderNextSteps($registration, $registration->event);
         }
 
         return view('events.waiver', compact('registration'));
@@ -217,13 +205,10 @@ class RegistrationController extends Controller
     {
         abort_unless(auth()->id() === $registration->user_id, 403);
 
-        $registration->load('event');
+        $registration->load(['event', 'waiver']);
 
         if ($registration->waiver) {
-            return view('events.registered_next_steps', [
-                'registration' => $registration,
-                'event'        => $registration->event,
-            ]);
+            return $this->renderNextSteps($registration, $registration->event);
         }
 
         $data = $request->validate([
@@ -244,10 +229,9 @@ class RegistrationController extends Controller
 
         Cache::forget((string) config('wellloop.cache.hr_overview_key', 'hr_overview_data_v21'));
 
-        return view('events.registered_next_steps', [
-            'registration' => $registration->fresh(['event', 'waiver']),
-            'event'        => $registration->event,
-        ]);
+        $freshReg = $registration->fresh(['event', 'waiver']);
+
+        return $this->renderNextSteps($freshReg, $freshReg->event);
     }
 
     public function consentForm(Registration $registration): RedirectResponse
@@ -263,6 +247,36 @@ class RegistrationController extends Controller
         $registration->update(['consent_given' => true]);
 
         return redirect()->route('registrations.waiver', $registration);
+    }
+
+    /**
+     * Render the Registration Confirmation screen with working Google Calendar & WhatsApp URLs.
+     */
+    private function renderNextSteps(Registration $registration, Event $event): View
+    {
+        $tz         = (string) config('wellloop.timezone', 'Africa/Nairobi');
+        $eventStart = $event->starts_at ? $event->starts_at->copy()->shiftTimezone($tz) : now($tz);
+        $eventEnd   = $eventStart->copy()->addHours(2);
+
+        $gcalParams = http_build_query([
+            'action'   => 'TEMPLATE',
+            'text'     => 'Strathmore WellLoop: ' . $event->name,
+            'dates'    => $eventStart->format('Ymd\THis') . '/' . $eventEnd->format('Ymd\THis'),
+            'details'  => ($event->description ?: 'Strathmore University Staff Wellness Session.') . "\nVenue: " . $event->location,
+            'location' => $event->location . ', Strathmore University, Nairobi',
+            'ctz'      => $tz,
+        ], '', '&', PHP_QUERY_RFC3986);
+
+        $googleCalendarUrl = 'https://calendar.google.com/calendar/render?' . $gcalParams;
+        $whatsappUrl       = $event->whatsapp_channel_url;
+
+        return view('events.registered_next_steps', [
+            'registration'      => $registration,
+            'event'             => $event,
+            'googleCalendarUrl' => $googleCalendarUrl,
+            'calendarUrl'       => $googleCalendarUrl,
+            'whatsappUrl'       => $whatsappUrl,
+        ]);
     }
 
     private function awardPointsOnce(Registration $registration, string $reason, int $points): void

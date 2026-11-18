@@ -1,89 +1,118 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 py-12">
+@php
+    $categories = [
+        'all'           => 'All',
+        'saved'         => 'Saved (' . ($savedCount ?? count($bookmarkedIds ?? [])) . ')',
+        'physical'      => 'Physical',
+        'mental'        => 'Mental',
+        'financial'     => 'Financial',
+        'social'        => 'Social',
+        'intellectual'  => 'Intellectual',
+        'occupational'  => 'Occupational',
+        'environmental' => 'Environmental',
+        'spiritual'     => 'Spiritual',
+    ];
+@endphp
 
-    <!-- Header & Search -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header & Search Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Wellness Content Hub</h1>
-            <p class="text-sm text-slate-500 mt-2">Explore articles, guides, and resources across all 8 wellness dimensions.</p>
+            <h1 class="text-2xl font-extrabold text-slate-900">Wellness Content Hub</h1>
+            <p class="text-xs text-slate-500 italic mt-0.5">
+                Explore articles, guides, and resources across all 8 wellness dimensions.
+            </p>
         </div>
 
-        <form method="GET" action="{{ route('content.index') }}" class="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
-            <input type="text" name="q" value="{{ $search }}" placeholder="Search articles..."
-                   class="border-none bg-transparent text-sm px-3 py-2 w-full md:w-64 focus:ring-0 outline-none">
-            <button type="submit" class="bg-slate-900 text-white font-bold px-5 py-2 rounded-lg text-xs hover:bg-brand transition">Search</button>
+        <form method="GET" action="{{ route('content.index') }}" class="flex items-center gap-2">
+            @if(($activeCategory ?? 'all') !== 'all')
+                <input type="hidden" name="category" value="{{ $activeCategory }}">
+            @endif
+            <input type="text"
+                   name="search"
+                   value="{{ $search ?? '' }}"
+                   placeholder="Search articles..."
+                   class="border border-slate-200 rounded-xl text-xs font-bold px-4 py-2.5 bg-white w-60 focus:ring-[#02338d] focus:border-[#02338d]">
+            <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition">
+                Search
+            </button>
         </form>
     </div>
 
     @if(session('success'))
-        <div class="mb-8 bg-emerald-50 text-emerald-700 px-4 py-3 rounded-xl text-sm font-bold border border-emerald-200 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            {{ session('success') }}
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs font-extrabold flex items-center gap-2">
+            <span>✓ {{ session('success') }}</span>
+            @if(($activeCategory ?? 'all') !== 'saved')
+                <a href="{{ route('content.index', ['category' => 'saved']) }}" class="underline text-[#02338d] ml-2">
+                    View Saved Articles →
+                </a>
+            @endif
         </div>
     @endif
 
-    <!-- Category Pills -->
-    <div class="flex flex-wrap gap-2 mb-10 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm w-fit">
-        <a href="{{ route('content.index') }}" class="px-5 py-2 rounded-xl text-xs font-bold transition-colors {{ !$activeCategory ? 'bg-brand text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50' }}">All</a>
-        @foreach(['physical','mental','financial','social','intellectual','occupational','environmental','spiritual'] as $cat)
-            <a href="{{ route('content.index', ['category' => $cat]) }}"
-               class="px-5 py-2 rounded-xl text-xs font-bold capitalize transition-colors {{ $activeCategory === $cat ? 'bg-brand text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50' }}">
-                {{ $cat }}
+    <!-- Category + Saved Filter Pills -->
+    <div class="flex flex-wrap items-center gap-2">
+        @foreach($categories as $key => $label)
+            @php $isActive = ($activeCategory ?? 'all') === $key; @endphp
+            <a href="{{ route('content.index', array_filter(['category' => $key === 'all' ? null : $key, 'search' => $search ?? null])) }}"
+               class="text-xs font-extrabold px-4 py-2 rounded-full transition {{ $isActive ? 'bg-[#02338d] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+                {{ $label }}
             </a>
         @endforeach
     </div>
 
-    <!-- Content Grid -->
-    @if($contents->isEmpty())
-        <div class="bg-white rounded-3xl border border-slate-200 p-16 text-center shadow-sm">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
-            </div>
-            <h3 class="text-xl font-bold text-slate-900 mb-2">No articles found</h3>
-            <p class="text-slate-500 text-sm">Try adjusting your search or category filter.</p>
+    <!-- Articles Grid -->
+    @if($articles->isEmpty())
+        <div class="bg-white rounded-3xl border border-slate-200 p-10 text-center">
+            <p class="text-sm font-extrabold text-slate-700">
+                {{ ($activeCategory ?? 'all') === 'saved' ? 'No saved articles yet.' : 'No articles match your filter.' }}
+            </p>
+            <p class="text-xs text-slate-500 mt-1">
+                {{ ($activeCategory ?? 'all') === 'saved' ? 'Click the bookmark icon on any wellness guide to save it here for later reading.' : 'Try clearing your search or selecting another wellness dimension.' }}
+            </p>
         </div>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            @foreach($contents as $content)
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                    @if($content->image_url)
-                        <div class="h-48 w-full overflow-hidden">
-                            <img src="{{ $content->image_url }}" alt="{{ $content->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        </div>
-                    @else
-                        <div class="h-2 bg-brand"></div>
-                    @endif
-
-                    <div class="p-6 flex flex-col flex-1">
-                        @if($content->category)
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-brand bg-brand-light px-3 py-1.5 rounded-full w-fit mb-4">
-                                {{ $content->category }}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach($articles as $article)
+                @php $isSaved = in_array($article->id, $bookmarkedIds ?? [], true); @endphp
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
+                    <div class="h-1.5 bg-[#02338d]"></div>
+                    <div class="p-6 flex-1 flex flex-col justify-between">
+                        <div>
+                            <span class="inline-block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full mb-3">
+                                {{ strtoupper($article->category ?? 'WELLNESS') }}
                             </span>
-                        @endif
+                            <h2 class="text-base font-extrabold text-slate-900 leading-snug">
+                                {{ $article->title }}
+                            </h2>
+                            <p class="text-xs text-slate-500 italic mt-2 line-clamp-3">
+                                {{ $article->summary ?? \Illuminate\Support\Str::limit(strip_tags((string) $article->body), 130) }}
+                            </p>
+                        </div>
 
-                        <h3 class="font-bold text-xl text-slate-900 mb-3 leading-tight group-hover:text-brand transition-colors">
-                            <a href="{{ route('content.show', $content->slug) }}" class="focus:outline-none">
-                                {{ $content->title }}
-                            </a>
-                        </h3>
-                        
-                        <p class="text-sm text-slate-500 mb-6 line-clamp-2">{{ $content->excerpt }}</p>
-
-                        <div class="mt-auto flex items-center justify-between pt-5 border-t border-slate-100">
-                            <a href="{{ route('content.show', $content->slug) }}"
-                               class="text-brand font-bold text-sm hover:underline flex items-center gap-1">
-                                Read Article <span aria-hidden="true">&rarr;</span>
+                        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                            <a href="{{ route('content.show', $article) }}"
+                               class="text-xs font-extrabold text-[#02338d] hover:underline">
+                                Read Article →
                             </a>
 
-                            <form method="POST" action="{{ route('content.save', $content->slug) }}">
+                            <form method="POST" action="{{ route('content.bookmark', $article) }}">
                                 @csrf
-                                <button type="submit" title="{{ in_array($content->id, $savedIds) ? 'Remove from saved' : 'Save for later' }}"
-                                        class="p-2 rounded-xl transition-colors {{ in_array($content->id, $savedIds) ? 'bg-brand-light text-brand' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-brand' }}">
-                                    <svg class="w-5 h-5" fill="{{ in_array($content->id, $savedIds) ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-                                    </svg>
+                                <button type="submit"
+                                        title="{{ $isSaved ? 'Remove from Saved' : 'Save for Later' }}"
+                                        class="p-2 rounded-xl transition {{ $isSaved ? 'text-[#02338d] bg-[#e8f0fe]' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' }}">
+                                    @if($isSaved)
+                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                            <path d="M5 3a2 2 0 00-2 2v16l9-4 9 4V5a2 2 0 00-2-2H5z"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                        </svg>
+                                    @endif
                                 </button>
                             </form>
                         </div>
@@ -91,10 +120,7 @@
                 </div>
             @endforeach
         </div>
-
-        <div class="mt-12 flex justify-center">
-            {{ $contents->links() }}
-        </div>
     @endif
+
 </div>
 @endsection

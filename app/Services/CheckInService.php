@@ -17,12 +17,100 @@ use RuntimeException;
 
 class CheckInService
 {
+    /**
+     * Calculate exact check-in timing status and points (Full vs. 10-Min Late Grace vs. Closed).
+     *
+     * @return array{
+     *     status: string,
+     *     is_open: bool,
+     *     is_late: bool,
+     *     minutes_late: int,
+     *     base_points: int,
+     *     awarded_points: int,
+     *     points_reduced_by: int,
+     *     penalty_percent: int,
+     *     opens_at: \Illuminate\Support\Carbon,
+     *     starts_at: \Illuminate\Support\Carbon,
+     *     closes_at: \Illuminate\Support\Carbon
+     * }
+     */
+    public function evaluateGateStatus(Event $event): array
+    {
+        $tz                 = (string) config('wellloop.timezone', 'Africa/Nairobi');
+        $opensBeforeMinutes = (int) config('wellloop.checkin.opens_minutes_before', 60);
+        $lateGraceMinutes   = (int) config('wellloop.checkin.late_grace_minutes', 10);
+        $penaltyPercent     = (int) config('wellloop.checkin.late_penalty_percent', 40);
+        $basePoints         = (int) ($event->points_checkin ?? config('wellloop.checkin.default_points', 25));
+
+        $startsAt = $event->starts_at->copy()->shiftTimezone($tz);
+        $opensAt  = $startsAt->copy()->subMinutes($opensBeforeMinutes);
+        $closesAt = $startsAt->copy()->addMinutes($lateGraceMinutes);
+        $now      = now($tz);
+
+        if ($now->lt($opensAt)) {
+            return [
+                'status'            => 'locked',
+                'is_open'           => false,
+                'is_late'           => false,
+                'minutes_late'      => 0,
+                'base_points'       => $basePoints,
+                'awarded_points'    => $basePoints,
+                'points_reduced_by' => 0,
+                'penalty_percent'   => $penaltyPercent,
+                'opens_at'          => $opensAt,
+                'starts_at'         => $startsAt,
+                'closes_at'         => $closesAt,
+            ];
+        }
+
+        if ($now->gt($closesAt)) {
+            return [
+                'status'            => 'closed',
+                'is_open'           => false,
+                'is_late'           => false,
+                'minutes_late'      => 0,
+                'base_points'       => $basePoints,
+                'awarded_points'    => 0,
+                'points_reduced_by' => $basePoints,
+                'penalty_percent'   => $penaltyPercent,
+                'opens_at'          => $opensAt,
+                'starts_at'         => $startsAt,
+                'closes_at'         => $closesAt,
+            ];
+        }
+
+        $isLate      = $now->gt($startsAt);
+        $minutesLate = $isLate ? max(1, (int) $startsAt->diffInMinutes($now)) : 0;
+
+        if ($isLate && $basePoints > 0) {
+            $awardedPoints   = max(1, (int) round($basePoints * ((100 - $penaltyPercent) / 100)));
+            $pointsReducedBy = max(0, $basePoints - $awardedPoints);
+        } else {
+            $awardedPoints   = $basePoints;
+            $pointsReducedBy = 0;
+        }
+
+        return [
+            'status'            => $isLate ? 'late_grace' : 'open_on_time',
+            'is_open'           => true,
+            'is_late'           => $isLate,
+            'minutes_late'      => $minutesLate,
+            'base_points'       => $basePoints,
+            'awarded_points'    => $awardedPoints,
+            'points_reduced_by' => $pointsReducedBy,
+            'penalty_percent'   => $penaltyPercent,
+            'opens_at'          => $opensAt,
+            'starts_at'         => $startsAt,
+            'closes_at'         => $closesAt,
+        ];
+    }
+
     public function processVenueQrScan(User $user, Event $event): array
     {
-        $this->assertWithinCheckInWindow($event);
+        $gate = $this->assertWithinCheckInWindow($event);
 
         try {
-            $result = DB::transaction(function () use ($user, $event): array {
+            $result = DB::transaction(function () use ($user, $event, $gate): array {
                 $lockedEvent = Event::whereKey($event->id)->lockForUpdate()->firstOrFail();
 
                 $registration = Registration::with(['waiver', 'checkIn', 'wellbeingResponses'])
@@ -31,7 +119,7 @@ class CheckInService
                     ->lockForUpdate()
                     ->first();
 
-                $autoRegistered = false;
+                $autoRegistered   = false;
                 $alreadyCheckedIn = false;
 
                 if (! $registration) {
@@ -68,14 +156,18 @@ class CheckInService
                     $registration->update(['status' => 'checked_in']);
                 }
 
-                $points = (int) ($lockedEvent->points_checkin ?? config('wellloop.checkin.default_points', 20));
-                $pointsAwarded = $this->awardPointsOnce($registration, 'attended_event', $points);
+                $pointsToAward = $gate['awarded_points'];
+                $pointsAwarded = $this->awardPointsOnce($registration, 'attended_event', $pointsToAward);
 
                 return [
                     'registration'       => $registration->fresh(['event', 'waiver', 'checkIn', 'wellbeingResponses']),
                     'auto_registered'    => $autoRegistered,
                     'already_checked_in' => $alreadyCheckedIn,
-                    'points_earned'      => $pointsAwarded ? $points : 0,
+                    'points_earned'      => $pointsAwarded ? $pointsToAward : 0,
+                    'is_late'            => $gate['is_late'],
+                    'minutes_late'       => $gate['minutes_late'],
+                    'base_points'        => $gate['base_points'],
+                    'points_reduced_by'  => $gate['points_reduced_by'],
                 ];
             });
         } catch (UniqueConstraintViolationException) {
@@ -89,23 +181,27 @@ class CheckInService
                 'auto_registered'    => false,
                 'already_checked_in' => true,
                 'points_earned'      => 0,
+                'is_late'            => $gate['is_late'],
+                'minutes_late'       => $gate['minutes_late'],
+                'base_points'        => $gate['base_points'],
+                'points_reduced_by'  => $gate['points_reduced_by'],
             ];
         }
 
         $this->invalidateAnalyticsCache($event);
 
         Log::info('WellLoop venue QR check-in processed', [
-            'user_id'            => $user->id,
-            'staff_id'           => $user->staff_id,
-            'event_id'           => $event->id,
-            'registration_id'    => $result['registration']->id,
-            'auto_registered'    => $result['auto_registered'],
-            'already_checked_in' => $result['already_checked_in'],
-            'points_earned'      => $result['points_earned'],
+            'user_id'           => $user->id,
+            'staff_id'          => $user->staff_id,
+            'event_id'          => $event->id,
+            'registration_id'   => $result['registration']->id,
+            'is_late'           => $result['is_late'],
+            'points_earned'     => $result['points_earned'],
+            'points_reduced_by' => $result['points_reduced_by'],
         ]);
 
         $registration = $result['registration'];
-        $hasPreWho5 = $registration->wellbeingResponses->whereIn('stage', ['pre', 'baseline'])->isNotEmpty();
+        $hasPreWho5   = $registration->wellbeingResponses->whereIn('stage', ['pre', 'baseline'])->isNotEmpty();
 
         return [
             ...$result,
@@ -116,11 +212,16 @@ class CheckInService
     public function confirmRegistrationCheckIn(Registration $registration, string $method = 'qr_scan', ?User $actor = null): array
     {
         $registration->load(['event', 'user', 'waiver', 'checkIn']);
-        $event = $registration->event;
+        $event    = $registration->event;
         $attendee = $registration->user;
 
-        if (! $actor || ! $actor->isHrCoordinator()) {
-            $this->assertWithinCheckInWindow($event);
+        $isHrOverride = $actor && $actor->isHrCoordinator() && $method === 'manual';
+
+        if (! $isHrOverride) {
+            $gate   = $this->assertWithinCheckInWindow($event);
+            $points = $gate['awarded_points'];
+        } else {
+            $points = (int) ($event->points_checkin ?? config('wellloop.checkin.default_points', 25));
         }
 
         if (! $registration->waiver) {
@@ -135,8 +236,6 @@ class CheckInService
                 'already_checked_in' => true,
             ];
         }
-
-        $points = (int) ($event->points_checkin ?? config('wellloop.checkin.default_points', 20));
 
         DB::transaction(function () use ($registration, $method, $points): void {
             $lockedReg = Registration::with('checkIn')->whereKey($registration->id)->lockForUpdate()->firstOrFail();
@@ -166,28 +265,23 @@ class CheckInService
         ];
     }
 
-    public function assertWithinCheckInWindow(Event $event): void
+    public function assertWithinCheckInWindow(Event $event): array
     {
-        $tz                 = (string) config('wellloop.timezone', 'Africa/Nairobi');
-        $opensBeforeMinutes = (int) config('wellloop.checkin.opens_minutes_before', 60);
-        $closesAfterHours   = (int) config('wellloop.checkin.closes_hours_after', 8);
+        $gate = $this->evaluateGateStatus($event);
 
-        $eventStart  = $event->starts_at->copy()->shiftTimezone($tz);
-        $windowStart = $eventStart->copy()->subMinutes($opensBeforeMinutes);
-        $windowEnd   = $eventStart->copy()->addHours($closesAfterHours);
-        $now         = now($tz);
-
-        if ($now->lt($windowStart)) {
+        if ($gate['status'] === 'locked') {
             throw new RuntimeException(
-                'Check-in for ' . $event->name . ' opens 1 hour before the session on ' . $windowStart->format('D, d M Y \a\t H:i') . ' EAT.'
+                'Check-in for ' . $event->name . ' opens 1 hour before the session on ' . $gate['opens_at']->format('D, d M Y \a\t H:i') . ' EAT.'
             );
         }
 
-        if ($now->gt($windowEnd)) {
+        if ($gate['status'] === 'closed') {
             throw new RuntimeException(
-                'The check-in window for ' . $event->name . ' has closed. Contact People & Culture for attendance assistance.'
+                'The check-in gate for ' . $event->name . ' closed at ' . $gate['closes_at']->format('H:i') . ' EAT (10 minutes after start time).'
             );
         }
+
+        return $gate;
     }
 
     private function awardPointsOnce(Registration $registration, string $reason, int $points): bool

@@ -1,269 +1,394 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Event | Strathmore University</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/Strathmore_uni_logo-notext.png') }}?v=2">
-    
-    <link href="https://fonts.cdnfonts.com/css/sansation" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { 
-            theme: { 
-                extend: { 
-                    colors: { brand: '#02338d', 'brand-light': '#e8f0fe', wl: { gold: '#c99a2e' } },
-                    fontFamily: { sans: ['Sansation', 'sans-serif'] }
-                } 
-            } 
-        }
-    </script>
-    <style> 
-        body, h1, h2, h3, h4, h5, h6, p, div, span, a, button, input, select, textarea, table, th, td { 
-            font-family: 'Sansation', sans-serif !important; 
-        } 
-        body { background-color: #f8fafc; }
-        
-        .flatpickr-calendar {
-            font-family: 'Sansation', sans-serif !important;
-            border-radius: 1rem !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
-            border: 1px solid #e2e8f0 !important;
-        }
-        .flatpickr-day.selected {
-            background: #02338d !important;
-            border-color: #02338d !important;
-        }
-    </style>
-</head>
-<body>
-    <x-hr-nav />
+@extends('layouts.app')
 
-    @php
-        $isPast = $event->starts_at->isPast();
-        $attendeeCount = $event->registrations_count ?? $event->registrations()->count();
-        $formattedStartsAt = $event->starts_at->format('Y-m-d H:i:s');
-    @endphp
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        font-family: 'Montserrat', sans-serif !important;
+        border-radius: 16px !important;
+        box-shadow: 0 12px 32px rgba(2, 51, 141, 0.16) !important;
+        border: 1px solid #e2e8f0 !important;
+        overflow: hidden;
+    }
+    .flatpickr-day.selected, .flatpickr-day.selected:hover {
+        background: #02338d !important;
+        border-color: #02338d !important;
+    }
+    .flatpickr-time {
+        border-top: 1px solid #e2e8f0 !important;
+        padding: 4px 8px !important;
+    }
+    .flatpickr-time .flatpickr-am-pm {
+        background: #e8f0fe !important;
+        color: #02338d !important;
+        font-weight: 800 !important;
+        border-radius: 8px !important;
+        margin: 4px !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease;
+    }
+    .flatpickr-time .flatpickr-am-pm:hover {
+        background: #02338d !important;
+        color: #ffffff !important;
+    }
+</style>
+@endpush
 
-    <main class="max-w-4xl mx-auto px-6 py-8">
-        
-        <div class="mb-8 flex flex-wrap justify-between items-center gap-4">
-            <div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Edit Wellness Event</h1>
-                    @if($isPast)
-                        <span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-800 inline-flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            Audit-Locked Historical Record
-                        </span>
-                    @else
-                        <span class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
-                            Upcoming Event
-                        </span>
-                    @endif
-                </div>
-                <p class="text-sm text-gray-500 mt-1">
-                    {{ $isPast ? 'Correct venue spelling, update summary notes, or modify WhatsApp links while preserving historical points and dates.' : 'Modify upcoming event schedule, venue, capacity, or point allocations.' }}
-                </p>
-            </div>
-            <a href="{{ route('events.management') }}" class="text-xs font-bold bg-white text-brand border border-brand/20 px-4 py-2 rounded-lg hover:bg-brand-light transition shadow-sm">
-                ← Back to Manage Events
-            </a>
+@section('content')
+@php
+    $tz               = (string) config('wellloop.timezone', 'Africa/Nairobi');
+    $lateGraceMinutes = (int) config('wellloop.checkin.late_grace_minutes', 10);
+    $cutoff           = now($tz)->subMinutes($lateGraceMinutes);
+
+    $isPast = $isPast ?? ($event->starts_at === null || $event->starts_at->copy()->shiftTimezone($tz)->lte($cutoff));
+    $formattedDate = old('starts_at', $event->starts_at?->copy()->shiftTimezone($tz)->format('Y-m-d H:i'));
+@endphp
+
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <a href="{{ route('events.management') }}" class="text-xs font-extrabold text-[#02338d] hover:underline transition">
+            ← Back to Events Management
+        </a>
+
+        <div class="flex items-center gap-2">
+            @if($isPast)
+                <span class="text-[10px] font-extrabold uppercase tracking-wider bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1 rounded-full">
+                    Past Event • Audit-Protected Mode
+                </span>
+            @else
+                <span class="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full">
+                    Upcoming Event • Full Edit Mode
+                </span>
+            @endif
         </div>
+    </div>
 
-        @if($isPast)
-            <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-900 px-5 py-4 rounded-2xl text-sm flex items-start gap-3 shadow-sm">
-                <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <div>
-                    <p class="font-bold">Audit Integrity Protection Active</p>
-                    <p class="text-xs text-amber-800 mt-0.5 leading-relaxed">
-                        This event took place on {{ $event->starts_at->format('M d, Y \a\t H:i') }}. To protect staff wellness point ledgers and pillar impact reports, <strong>Date &amp; Time</strong>, <strong>Wellness Category</strong>, and <strong>Point Values</strong> are locked. You may still update the event name, location, description, or WhatsApp channel URL.
-                    </p>
-                </div>
+    @if($isPast)
+        <div class="bg-amber-50/90 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+            <svg class="w-5 h-5 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            <div class="text-xs text-amber-950 leading-relaxed">
+                <span class="font-extrabold block">Historical Audit Protection Active</span>
+                You can edit the <strong>Event Name</strong>, <strong>Location</strong>, <strong>WhatsApp URL</strong>, and <strong>Description</strong> to correct typos. Critical audit fields (<strong>Date & Start Time</strong>, <strong>Capacity</strong>, <strong>Wellness Pillar</strong>, and <strong>Points</strong>) are locked to preserve completed attendance and WHO-5 records.
             </div>
-        @endif
+        </div>
+    @endif
 
-        @if($errors->any())
-            <div class="mb-6 bg-rose-50 text-rose-600 px-5 py-4 rounded-2xl text-sm font-bold border border-rose-200 flex items-center gap-3 shadow-sm">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                {{ $errors->first() }}
+    @if($errors->any())
+        <div class="bg-[#e03c31]/10 text-[#b8281e] px-5 py-4 rounded-2xl text-xs font-bold border border-[#e03c31]/30 shadow-sm">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
+    <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="h-1.5 bg-gradient-to-r from-[#02338d] to-[#c99a2e]"></div>
+
+        <div class="p-6 sm:p-8">
+            <div class="pb-5 border-b border-slate-100">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#02338d]">
+                    {{ $isPast ? 'Edit Past Session Details (Typo & Text Correction)' : 'Edit Upcoming Wellness Session' }}
+                </span>
+                <h1 class="text-xl font-extrabold text-[#1d1d1b] mt-1 tracking-tight">{{ $event->name }}</h1>
             </div>
-        @endif
 
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-            <form method="POST" action="{{ route('events.update', $event) }}" class="space-y-6">
+            <form method="POST" action="{{ route('events.update', $event) }}" class="space-y-5 pt-6">
                 @csrf
                 @method('PUT')
 
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Event Name</label>
-                    <input type="text" name="name" value="{{ old('name', $event->name) }}" required class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Date & Time</label>
-                            @if($isPast)
-                                <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Locked</span>
-                            @else
-                                <span class="text-[10px] font-bold text-brand bg-brand-light px-2 py-0.5 rounded">Future Only</span>
-                            @endif
-                        </div>
-
-                        @if($isPast)
-                            <input type="text" value="{{ $event->starts_at->format('F j, Y \a\t h:i A') }}" disabled class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-100 text-gray-500 cursor-not-allowed">
-                            <input type="hidden" name="starts_at" value="{{ $formattedStartsAt }}">
-                        @else
-                            <input type="text" name="starts_at" id="starts_at" value="{{ old('starts_at', $formattedStartsAt) }}" required class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand cursor-pointer">
-                            <p class="text-[11px] text-gray-400 mt-1">Upcoming events can only be rescheduled to future dates and times.</p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Capacity</label>
-                        <input type="number" name="capacity" value="{{ old('capacity', $event->capacity) }}" required min="{{ max(1, $attendeeCount) }}" class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand">
-                        @if($attendeeCount > 0)
-                            <p class="text-[11px] text-gray-400 mt-1">Minimum capacity is {{ $attendeeCount }} (current registered staff count).</p>
-                        @endif
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Location</label>
-                    <input type="text" name="location" value="{{ old('location', $event->location) }}" required class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand">
-                </div>
-
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Wellness Category</label>
-                        @if($isPast)
-                            <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Locked</span>
-                        @endif
-                    </div>
-
-                    @if($isPast)
-                        <input type="hidden" name="category" value="{{ $event->category }}">
-                    @endif
-
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        @foreach(['physical', 'mental', 'financial', 'social', 'intellectual', 'occupational', 'environmental', 'spiritual'] as $cat)
-                            <label class="{{ $isPast ? 'cursor-not-allowed opacity-75' : 'cursor-pointer' }}">
-                                <input type="radio" name="category" value="{{ $cat }}" class="peer sr-only" @checked(old('category', $event->category) === $cat) @disabled($isPast) required>
-                                <div class="text-center py-2.5 px-3 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white peer-checked:bg-brand peer-checked:text-white peer-checked:border-brand {{ $isPast ? '' : 'hover:bg-gray-50' }} transition-all capitalize">
-                                    {{ $cat }}
-                                </div>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Check-in Pts</label>
-                            @if($isPast)
-                                <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Locked</span>
-                            @endif
-                        </div>
-                        @if($isPast)
-                            <input type="number" value="{{ $event->points_checkin }}" disabled class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-100 text-gray-500 cursor-not-allowed">
-                            <input type="hidden" name="points_checkin" value="{{ $event->points_checkin }}">
-                        @else
-                            <input type="number" name="points_checkin" value="{{ old('points_checkin', $event->points_checkin) }}" required min="0" class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand">
-                        @endif
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Feedback Pts</label>
-                            @if($isPast)
-                                <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Locked</span>
-                            @endif
-                        </div>
-                        @if($isPast)
-                            <input type="number" value="{{ $event->points_feedback }}" disabled class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-100 text-gray-500 cursor-not-allowed">
-                            <input type="hidden" name="points_feedback" value="{{ $event->points_feedback }}">
-                        @else
-                            <input type="number" name="points_feedback" value="{{ old('points_feedback', $event->points_feedback) }}" required min="0" class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand">
-                        @endif
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Event WhatsApp Channel URL</label>
-                    <p class="text-[11px] text-gray-400 mb-2">Staff are directed to this link after completing registration and waiver signing.</p>
-                    <input type="url" name="comlink" value="{{ old('comlink', $event->comlink) }}" placeholder="https://whatsapp.com/channel/... or https://chat.whatsapp.com/..." class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                        {{ $isPast ? 'Description & Post-Event Summary Notes' : 'Description' }}
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1.5">
+                        Event Name <span class="text-emerald-600 font-bold">(Editable)</span>
                     </label>
-                    <textarea name="description" rows="4" required class="w-full border-gray-200 rounded-xl text-sm p-3 bg-gray-50 focus:ring-brand focus:border-brand">{{ old('description', $event->description) }}</textarea>
+                    <input type="text"
+                           name="name"
+                           value="{{ old('name', $event->name) }}"
+                           required
+                           class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
                 </div>
 
-                <div class="pt-2 flex flex-wrap items-center justify-end gap-3">
-                    <a href="{{ route('events.management') }}" class="px-5 py-3 rounded-xl text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                                Date & Start Time (EAT)
+                            </label>
+                            @if($isPast)
+                                <span class="text-[9px] font-extrabold uppercase bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">
+                                    🔒 Locked
+                                </span>
+                            @endif
+                        </div>
+
+                        @if($isPast)
+                            <input type="text"
+                                   value="{{ $event->starts_at?->copy()->shiftTimezone($tz)->format('D, d M Y \a\t h:i A') }} EAT"
+                                   disabled
+                                   readonly
+                                   class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-slate-400 p-3 bg-slate-100 cursor-not-allowed select-none">
+                        @else
+                            <div class="relative flex items-center" id="edit-datetime-picker">
+                                <input type="text"
+                                       id="edit_starts_at"
+                                       name="starts_at"
+                                       value="{{ $formattedDate }}"
+                                       placeholder="Click calendar to pick..."
+                                       data-input
+                                       required
+                                       readonly
+                                       class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] py-3 pl-3 pr-10 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d] cursor-pointer">
+                                <button type="button"
+                                        title="Open Calendar & AM/PM Time Picker"
+                                        data-toggle
+                                        class="absolute right-2.5 text-[#02338d] hover:text-[#01225e] p-1 rounded-lg hover:bg-blue-50 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p id="edit-datetime-clamp-notice" class="hidden text-[10px] font-extrabold text-amber-700 mt-1">
+                                Past time prevented — automatically set to current EAT time.
+                            </p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                                Capacity
+                            </label>
+                            @if($isPast)
+                                <span class="text-[9px] font-extrabold uppercase bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">
+                                    🔒 Locked
+                                </span>
+                            @endif
+                        </div>
+
+                        @if($isPast)
+                            <input type="number"
+                                   value="{{ $event->capacity }}"
+                                   disabled
+                                   readonly
+                                   class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-slate-400 p-3 bg-slate-100 cursor-not-allowed select-none">
+                        @else
+                            <input type="number"
+                                   name="capacity"
+                                   value="{{ old('capacity', $event->capacity) }}"
+                                   min="1"
+                                   required
+                                   class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+                        @endif
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1.5">
+                        Location <span class="text-emerald-600 font-bold">(Editable)</span>
+                    </label>
+                    <input type="text"
+                           name="location"
+                           value="{{ old('location', $event->location) }}"
+                           required
+                           class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                            Wellness Category
+                        </label>
+                        @if($isPast)
+                            <span class="text-[9px] font-extrabold uppercase bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">
+                                🔒 Locked
+                            </span>
+                        @endif
+                    </div>
+
+                    @php $selectedCat = old('category', $event->category); @endphp
+                    @if($isPast)
+                        <input type="text"
+                               value="{{ ucfirst((string) $event->category) }} Wellness"
+                               disabled
+                               readonly
+                               class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-slate-400 p-3 bg-slate-100 cursor-not-allowed select-none">
+                    @else
+                        <select name="category"
+                                required
+                                class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+                            <option value="physical" {{ $selectedCat === 'physical' ? 'selected' : '' }}>Physical</option>
+                            <option value="mental" {{ $selectedCat === 'mental' ? 'selected' : '' }}>Mental</option>
+                            <option value="financial" {{ $selectedCat === 'financial' ? 'selected' : '' }}>Financial</option>
+                            <option value="social" {{ $selectedCat === 'social' ? 'selected' : '' }}>Social</option>
+                            <option value="intellectual" {{ $selectedCat === 'intellectual' ? 'selected' : '' }}>Intellectual</option>
+                            <option value="occupational" {{ $selectedCat === 'occupational' ? 'selected' : '' }}>Occupational</option>
+                            <option value="environmental" {{ $selectedCat === 'environmental' ? 'selected' : '' }}>Environmental</option>
+                            <option value="spiritual" {{ $selectedCat === 'spiritual' ? 'selected' : '' }}>Spiritual</option>
+                        </select>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                                Check-In Pts
+                            </label>
+                            @if($isPast)
+                                <span class="text-[9px] font-extrabold uppercase bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">
+                                    🔒 Locked
+                                </span>
+                            @endif
+                        </div>
+
+                        @if($isPast)
+                            <input type="number"
+                                   value="{{ $event->points_checkin }}"
+                                   disabled
+                                   readonly
+                                   class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-slate-400 p-3 bg-slate-100 cursor-not-allowed select-none">
+                        @else
+                            <input type="number"
+                                   name="points_checkin"
+                                   value="{{ old('points_checkin', $event->points_checkin) }}"
+                                   min="0"
+                                   required
+                                   class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+                        @endif
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                                Feedback Pts
+                            </label>
+                            @if($isPast)
+                                <span class="text-[9px] font-extrabold uppercase bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">
+                                    🔒 Locked
+                                </span>
+                            @endif
+                        </div>
+
+                        @if($isPast)
+                            <input type="number"
+                                   value="{{ $event->points_feedback }}"
+                                   disabled
+                                   readonly
+                                   class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-slate-400 p-3 bg-slate-100 cursor-not-allowed select-none">
+                        @else
+                            <input type="number"
+                                   name="points_feedback"
+                                   value="{{ old('points_feedback', $event->points_feedback) }}"
+                                   min="0"
+                                   required
+                                   class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+                        @endif
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">
+                        Event WhatsApp Channel URL <span class="text-emerald-600 font-bold">(Editable)</span>
+                    </label>
+                    <p class="text-[11px] text-slate-500 mb-1.5">
+                        Staff are directed to this link after completing registration and waiver signing.
+                    </p>
+                    <input type="text"
+                           name="whatsapp_channel_url"
+                           value="{{ old('whatsapp_channel_url', $event->whatsapp_channel_url) }}"
+                           placeholder="https://whatsapp.com/channel/... or https://chat.whatsapp.com/..."
+                           class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1.5">
+                        Description <span class="text-emerald-600 font-bold">(Editable)</span>
+                    </label>
+                    <textarea name="description"
+                              rows="4"
+                              class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">{{ old('description', $event->description) }}</textarea>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                    <a href="{{ route('events.management') }}"
+                       class="text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-3.5 rounded-xl transition">
                         Cancel
                     </a>
-                    <button type="submit" class="px-6 py-3 rounded-xl text-sm font-bold bg-wl-gold text-brand shadow-sm hover:bg-yellow-600 transition">
-                        {{ $isPast ? 'Save Audit-Safe Updates' : 'Update Event' }}
+                    <button type="submit"
+                            class="bg-[#02338d] hover:bg-[#012466] text-white text-xs font-extrabold px-6 py-3.5 rounded-xl shadow-sm transition">
+                        {{ $isPast ? 'Save Text Corrections' : 'Update Wellness Session' }}
                     </button>
                 </div>
             </form>
         </div>
+    </div>
+</div>
+@endsection
 
-        <!-- Audit-Protected Deletion Card -->
-        <div class="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h3 class="text-sm font-bold text-gray-900">Archive / Remove Event Record</h3>
-                @if($isPast && $attendeeCount > 0)
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        Deletion is disabled because <strong>{{ $attendeeCount }} staff member(s)</strong> have attendance/points tied to this historical record.
-                    </p>
-                @else
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        Permanently remove this event if it was created in error and has no active attendance history.
-                    </p>
-                @endif
-            </div>
+@push('scripts')
+@if(! $isPast)
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof flatpickr !== 'function') return;
 
-            @if($isPast && $attendeeCount > 0)
-                <span class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-500 inline-flex items-center gap-1.5 cursor-not-allowed">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    Protected Record
-                </span>
-            @else
-                <form method="POST" action="{{ route('events.destroy', $event) }}" onsubmit="return confirm('Are you sure you want to permanently delete this event?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition">
-                        Delete Event
-                    </button>
-                </form>
-            @endif
-        </div>
+        function clampEditDateToCurrentTime(selectedDates, instance) {
+            const now = new Date();
+            now.setSeconds(0, 0);
 
-    </main>
+            if (!selectedDates || selectedDates.length === 0) return;
 
-    @if(!$isPast)
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                flatpickr("#starts_at", {
-                    enableTime: true,
-                    minDate: new Date(),
-                    defaultDate: "{{ old('starts_at', $formattedStartsAt) }}",
-                    dateFormat: "Y-m-d H:i:S", 
-                    altInput: true,
-                    altFormat: "F j, Y at h:i K", 
-                    time_24hr: false
-                });
-            });
-        </script>
-    @endif
-</body>
-</html>
+            const picked = selectedDates[0];
+            const isToday =
+                picked.getFullYear() === now.getFullYear() &&
+                picked.getMonth() === now.getMonth() &&
+                picked.getDate() === now.getDate();
+
+            if (isToday) {
+                const minH = String(now.getHours()).padStart(2, '0');
+                const minM = String(now.getMinutes()).padStart(2, '0');
+                instance.set('minTime', `${minH}:${minM}`);
+            } else {
+                instance.set('minTime', null);
+            }
+
+            if (picked.getTime() < now.getTime()) {
+                instance.setDate(now, false);
+                if (instance.altInput) {
+                    instance.altInput.value = instance.formatDate(now, instance.config.altFormat);
+                }
+                instance.input.value = instance.formatDate(now, instance.config.dateFormat);
+
+                const notice = document.getElementById('edit-datetime-clamp-notice');
+                if (notice) {
+                    notice.classList.remove('hidden');
+                    clearTimeout(window.__editClampTimer);
+                    window.__editClampTimer = setTimeout(() => notice.classList.add('hidden'), 4000);
+                }
+            }
+        }
+
+        flatpickr('#edit-datetime-picker', {
+            wrap: true,
+            enableTime: true,
+            dateFormat: 'Y-m-d H:i',
+            altInput: true,
+            altFormat: 'D, M j, Y \\a\\t h:i K',
+            time_24hr: false,
+            minDate: 'today',
+            minuteIncrement: 5,
+            allowInput: false,
+            clickOpens: true,
+            onOpen: function (selectedDates, dateStr, instance) {
+                clampEditDateToCurrentTime(selectedDates, instance);
+            },
+            onChange: function (selectedDates, dateStr, instance) {
+                clampEditDateToCurrentTime(selectedDates, instance);
+            },
+            onClose: function (selectedDates, dateStr, instance) {
+                clampEditDateToCurrentTime(selectedDates, instance);
+            }
+        });
+    });
+</script>
+@endif
+@endpush

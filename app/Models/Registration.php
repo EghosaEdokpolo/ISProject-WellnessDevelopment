@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -9,13 +11,20 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Registration extends Model
 {
-    protected $fillable = ['user_id', 'event_id', 'status'];
+    protected $fillable = [
+        'user_id',
+        'event_id',
+        'status',
+        'consent_given',
+    ];
 
-    // POINTER: Registration is the "hub" model in this app — almost every
-    // other table (waiver, check-in, wellbeing responses, feedback) points
-    // back to a registration rather than directly to a user or event. This
-    // mirrors your prototype's UC flow: you register FIRST, then everything
-    // else (waiver, check-in, feedback) happens against that one registration.
+    protected function casts(): array
+    {
+        return [
+            'consent_given' => 'boolean',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

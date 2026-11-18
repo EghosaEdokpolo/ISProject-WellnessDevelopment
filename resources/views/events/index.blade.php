@@ -1,191 +1,201 @@
-{{-- 1. Extend the Staff Portal master layout (renders the Navy/Gold Staff bar, never <x-hr-nav />) --}}
 @extends('layouts.app')
 
 @section('content')
-{{-- 2. Compute the logged-in staff member's points, appraisal tier, and existing registrations --}}
 @php
-    $user = auth()->user();
-    $points = (int) ($user->points_balance ?? 0);
-    $tier = $points >= 200 ? 'Gold' : ($points >= 100 ? 'Silver' : 'Bronze');
-    $tierColors = match ($tier) {
-        'Gold'   => 'bg-amber-100 text-amber-800 border-amber-300',
-        'Silver' => 'bg-slate-200 text-slate-800 border-slate-300',
-        default  => 'bg-orange-100 text-orange-800 border-orange-300',
-    };
-
-    $userRegistrations = $user->registrations()->get()->keyBy('event_id');
-    $categories = ['all', 'physical', 'mental', 'financial', 'social', 'intellectual', 'occupational', 'environmental', 'spiritual'];
+    $tz               = (string) config('wellloop.timezone', 'Africa/Nairobi');
+    $lateGraceMinutes = (int) config('wellloop.checkin.late_grace_minutes', 10);
+    $now              = now($tz);
 @endphp
 
-<div class="space-y-8">
+<div class="max-w-7xl mx-auto space-y-8">
 
-    {{-- 3. Staff Holistic Wellness & Appraisal Standing Banner --}}
-    <div class="bg-gradient-to-r from-[#02338d] to-[#01225e] rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-            <span class="text-[11px] font-bold uppercase tracking-widest text-[#c99a2e]">
-                Strathmore University · People & Culture
-            </span>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
-                Welcome, {{ $user->name }}
-            </h1>
-            <p class="text-sm text-blue-100 mt-1">
-                {{ $user->department ?? 'Strathmore Staff' }} • Staff ID: <span class="font-bold text-white">{{ $user->staff_id }}</span>
-            </p>
-        </div>
-
-        {{-- 4. Live Points Balance, Tier Badge, and Rewards Shortcut --}}
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="bg-white/10 border border-white/15 rounded-2xl px-4 py-3">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-blue-200">Wellness Points</p>
-                <p class="text-xl font-extrabold text-white">{{ number_format($points) }} <span class="text-xs font-bold text-[#c99a2e]">pts</span></p>
-            </div>
-
-            <div class="bg-white/10 border border-white/15 rounded-2xl px-4 py-3">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-blue-200">Appraisal Standing</p>
-                <span class="inline-block mt-0.5 text-xs font-extrabold px-2.5 py-0.5 rounded-full border {{ $tierColors }}">
-                    {{ $tier }} Tier
-                </span>
-            </div>
-
-            <a href="{{ route('rewards.index') }}" class="bg-[#c99a2e] hover:bg-yellow-500 text-[#01225e] font-extrabold text-xs px-4 py-3.5 rounded-2xl transition shadow-sm">
-                View Rewards →
-            </a>
-        </div>
-    </div>
-
-    {{-- 5. Session Success & Validation Error Alerts --}}
     @if(session('success'))
-        <div class="bg-emerald-50 text-emerald-800 px-5 py-4 rounded-2xl text-sm font-bold border border-emerald-200 flex items-center gap-3 shadow-sm">
-            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>{{ session('success') }}</span>
+        <div class="bg-emerald-50 text-emerald-800 px-5 py-4 rounded-2xl text-xs font-extrabold border border-emerald-200 shadow-sm">
+            {{ session('success') }}
         </div>
     @endif
 
-    @if($errors->any())
-        <div class="bg-rose-50 text-rose-700 px-5 py-4 rounded-2xl text-sm font-bold border border-rose-200 flex items-center gap-3 shadow-sm">
-            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>{{ $errors->first() }}</span>
+    @if(session('error'))
+        <div class="bg-rose-50 text-rose-700 px-5 py-4 rounded-2xl text-xs font-extrabold border border-rose-200 shadow-sm">
+            {{ session('error') }}
         </div>
     @endif
 
-    {{-- 6. Category Filter Strip --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <!-- Header & Search -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-            <h2 class="text-xl font-extrabold text-slate-900">Upcoming Wellness Events</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Register for sessions, complete your WHO-5 check-in, and earn holistic appraisal points.</p>
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#02338d] bg-[#e8f0fe] px-3 py-1 rounded-full">
+                Strathmore Staff Wellness
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">Upcoming Wellness Sessions</h1>
+            <p class="text-xs text-slate-500 mt-1">Register for upcoming campus sessions across the 8 dimensions of wellness.</p>
         </div>
 
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-            @foreach($categories as $cat)
-                <button type="button"
-                        onclick="filterStaffEvents('{{ $cat }}', this)"
-                        class="staff-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition shrink-0 {{ $cat === 'all' ? 'bg-[#02338d] text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
-                    {{ $cat }}
-                </button>
-            @endforeach
-        </div>
+        <form method="GET" action="{{ route('events.index') }}" class="flex items-center gap-2 w-full md:w-auto">
+            <input type="text"
+                   name="search"
+                   value="{{ $search ?? '' }}"
+                   placeholder="Search events or venues..."
+                   class="w-full md:w-64 border border-slate-200 rounded-xl text-xs font-semibold px-4 py-2.5 bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+            <button type="submit" class="bg-[#02338d] hover:bg-[#01225e] text-white text-xs font-extrabold px-4 py-2.5 rounded-xl transition">
+                Search
+            </button>
+        </form>
     </div>
 
-    {{-- 7. Staff Event Cards Grid --}}
-    @if($events->isEmpty())
-        <div class="bg-white rounded-3xl border border-slate-200 p-12 text-center shadow-sm">
-            <div class="w-14 h-14 bg-blue-50 text-[#02338d] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            </div>
-            <h3 class="text-lg font-bold text-slate-900">No upcoming wellness events</h3>
-            <p class="text-sm text-slate-500 mt-1">Check back soon for new sessions published by People & Culture.</p>
+    <!-- Upcoming Events Grid -->
+    @if($upcomingEvents->isEmpty())
+        <div class="bg-white rounded-3xl border border-slate-200 p-10 text-center shadow-sm">
+            <p class="text-sm font-extrabold text-slate-700">No upcoming wellness sessions scheduled right now.</p>
+            <p class="text-xs text-slate-500 mt-1">Check back soon or review past sessions below.</p>
         </div>
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach($events as $event)
+            @foreach($upcomingEvents as $event)
                 @php
-                    $registration = $userRegistrations->get($event->id);
-                    $registeredCount = $event->registrations_count ?? $event->registrations()->count();
-                    $spotsLeft = max(0, (int) $event->capacity - (int) $registeredCount);
-                    $totalPts = (int) $event->points_checkin + (int) $event->points_feedback;
+                    $eventStart  = $event->starts_at->copy()->shiftTimezone($tz);
+                    $myReg       = $myRegistrations->get($event->id);
+                    $spotsLeft   = max(0, (int) $event->capacity - (int) ($event->registrations_count ?? 0));
+                    $whatsappUrl = $event->whatsapp_channel_url;
                 @endphp
-
-                <div data-category="{{ strtolower($event->category) }}" class="staff-event-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition flex flex-col justify-between p-6">
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
                     <div>
-                        {{-- Category Pill & Total Earnable Points --}}
                         <div class="flex items-center justify-between gap-2 mb-3">
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-[#02338d] border border-blue-100">
-                                {{ ucfirst($event->category) }}
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#02338d] bg-[#e8f0fe] px-2.5 py-1 rounded-full">
+                                {{ strtoupper($event->category) }}
                             </span>
                             <span class="text-[11px] font-extrabold text-[#c99a2e] bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                +{{ $totalPts }} pts
+                                +{{ ($event->points_checkin ?? 25) + ($event->points_feedback ?? 10) }} pts
                             </span>
                         </div>
 
-                        <h3 class="text-lg font-extrabold text-slate-900 leading-snug mb-2">
-                            {{ $event->name }}
-                        </h3>
-
-                        <p class="text-xs text-slate-600 line-clamp-3 mb-4">
-                            {{ $event->description }}
+                        <h2 class="text-lg font-extrabold text-slate-900">{{ $event->name }}</h2>
+                        <p class="text-xs text-slate-500 italic mt-1 line-clamp-2">
+                            {{ $event->description ?? 'Upcoming Strathmore University staff wellness session.' }}
                         </p>
 
-                        {{-- Date, Venue, and Remaining Capacity --}}
-                        <div class="space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#02338d] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <span class="font-bold text-slate-800">{{ $event->starts_at->format('D, d M Y \a\t H:i') }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#02338d] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                <span>{{ $event->location }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#02338d] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                <span><strong class="text-slate-800">{{ $spotsLeft }}</strong> of {{ $event->capacity }} spots remaining</span>
-                            </div>
+                        <div class="mt-4 pt-4 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                            <p class="font-bold">{{ $eventStart->format('D, d M Y \a\t h:i A') }} EAT</p>
+                            <p class="italic text-slate-500">{{ $event->location }}</p>
+                            <p class="text-[11px] font-semibold text-slate-500">
+                                <strong>{{ $spotsLeft }}</strong> of {{ $event->capacity }} spots remaining
+                            </p>
                         </div>
                     </div>
 
-                    {{-- 8. Registration State Action Button --}}
-                    <div class="mt-6 pt-4 border-t border-slate-100">
-                        @if($registration)
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl">
-                                    Registered ✓
-                                </span>
-                                <a href="{{ route('registrations.ticket', $registration) }}" class="text-xs font-extrabold bg-[#02338d] text-white px-4 py-2 rounded-xl hover:bg-[#01225e] transition">
-                                    View Ticket
+                    <div class="mt-6 space-y-2">
+                        @if($myReg)
+                            @if($myReg->checkIn !== null)
+                                <div class="w-full text-center bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold py-3 rounded-xl">
+                                    Checked In ✓
+                                </div>
+                            @elseif(! $myReg->waiver && ! $myReg->consent_given)
+                                <a href="{{ route('registrations.waiver', $myReg) }}"
+                                   class="w-full block text-center bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold py-3.5 rounded-xl transition">
+                                    Complete Waiver →
                                 </a>
-                            </div>
-                        @elseif($spotsLeft > 0)
-                            <a href="{{ route('registrations.create', $event) }}" class="w-full block text-center bg-[#02338d] hover:bg-[#01225e] text-white text-xs font-extrabold py-3 rounded-xl transition shadow-sm">
+                            @else
+                                <a href="{{ route('registrations.ticket', $myReg) }}"
+                                   class="w-full block text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3.5 rounded-xl transition">
+                                    View Official Event Pass →
+                                </a>
+                            @endif
+
+                            @if(!empty($whatsappUrl))
+                                <a href="{{ $whatsappUrl }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="w-full block text-center bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-extrabold py-2.5 rounded-xl transition">
+                                    Join Event WhatsApp Channel ↗
+                                </a>
+                            @endif
+                        @elseif($spotsLeft <= 0)
+                            <button type="button" disabled class="w-full bg-slate-100 text-slate-400 text-xs font-extrabold py-3.5 rounded-xl cursor-not-allowed">
+                                Session Full
+                            </button>
+                        @else
+                            <a href="{{ route('events.register', $event) }}"
+                               class="w-full block text-center bg-[#02338d] hover:bg-[#01225e] text-white text-xs font-extrabold py-3.5 rounded-xl shadow-sm transition">
                                 Register for Event →
                             </a>
-                        @else
-                            <button type="button" disabled class="w-full bg-slate-100 text-slate-400 text-xs font-extrabold py-3 rounded-xl cursor-not-allowed">
-                                Capacity Full
-                            </button>
                         @endif
                     </div>
                 </div>
             @endforeach
         </div>
     @endif
+
+    <!-- Past Wellness Sessions (Fixes Photo 1: Explicit Badge for Every Single Card) -->
+    @if(isset($pastEvents) && $pastEvents->isNotEmpty())
+        <div class="mt-12 pt-8 border-t border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-1.5 h-6 bg-slate-400 rounded-full"></span>
+                    <h2 class="text-lg font-extrabold text-slate-800">Past Wellness Sessions</h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-[10px] font-extrabold">
+                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Attended ✓ = Checked In</span>
+                    <span class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200">Registered • Missed = No Check-In</span>
+                    <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Not Registered = Did Not Sign Up</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($pastEvents as $pastEv)
+                    @php
+                        $pastStart = $pastEv->starts_at->copy()->shiftTimezone($tz);
+                        $myPastReg = $myRegistrations->get($pastEv->id);
+                        $attended  = $myPastReg && ($myPastReg->checkIn !== null || in_array($myPastReg->status, ['checked_in', 'completed'], true));
+                    @endphp
+                    <div class="bg-white/90 rounded-3xl border border-slate-200 p-6 flex flex-col justify-between shadow-sm">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                                    {{ strtoupper($pastEv->category) }} • Past Record
+                                </span>
+
+                                @if($attended)
+                                    <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        Attended ✓
+                                    </span>
+                                @elseif($myPastReg)
+                                    <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                        Registered • Missed
+                                    </span>
+                                @else
+                                    <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                        Not Registered
+                                    </span>
+                                @endif
+                            </div>
+
+                            <h3 class="text-base font-extrabold text-slate-800">{{ $pastEv->name }}</h3>
+                            <p class="text-xs text-slate-500 italic mt-1">
+                                {{ $pastStart->format('D, d M Y \a\t h:i A') }} EAT • {{ $pastEv->location }}
+                            </p>
+                        </div>
+
+                        <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-slate-400">
+                                {{ $pastEv->registrations_count ?? 0 }}/{{ $pastEv->capacity }} registered
+                            </span>
+
+                            @if($attended && $myPastReg->status !== 'completed' && $myPastReg->feedback === null)
+                                <a href="{{ route('feedback.create', $myPastReg) }}"
+                                   class="text-xs font-extrabold text-[#02338d] hover:underline">
+                                    Complete Post-WHO →
+                                </a>
+                            @elseif($attended)
+                                <span class="text-[11px] font-extrabold text-emerald-600">Feedback Completed ✓</span>
+                            @else
+                                <span class="text-[11px] font-extrabold text-slate-400">Session Ended</span>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
 </div>
-
-{{-- 9. Client-side Category Filter Script --}}
-<script>
-    function filterStaffEvents(category, clickedBtn) {
-        document.querySelectorAll('.staff-cat-btn').forEach(btn => {
-            btn.classList.remove('bg-[#02338d]', 'text-white', 'shadow-sm');
-            btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
-        });
-        clickedBtn.classList.add('bg-[#02338d]', 'text-white', 'shadow-sm');
-        clickedBtn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
-
-        document.querySelectorAll('.staff-event-card').forEach(card => {
-            if (category === 'all' || card.getAttribute('data-category') === category) {
-                card.classList.remove('hidden');
-            } else {
-                card.classList.add('hidden');
-            }
-        });
-    }
-</script>
 @endsection

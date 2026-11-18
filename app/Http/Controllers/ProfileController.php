@@ -1,60 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
-    public function edit(Request $request): View
+    public function edit(Request $request): View|RedirectResponse
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
-    }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
         $user = $request->user();
 
-        Auth::logout();
+        // Keep HR Coordinators strictly inside the HR Portal settings page
+        if ($user->isHrCoordinator()) {
+            return redirect()->route('settings.edit');
+        }
 
-        $user->delete();
+        return view('profile.edit', [
+            'user' => $user,
+        ]);
+    }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    public function update(Request $request): RedirectResponse
+    {
+        $user = $request->user();
 
-        return Redirect::to('/');
+        if ($user->isHrCoordinator()) {
+            return redirect()->route('settings.edit');
+        }
+
+        $data = $request->validate([
+            'name'       => ['required', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user->update($data);
+
+        return back()->with('success', 'Your staff profile details have been updated.');
     }
 }

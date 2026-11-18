@@ -1,24 +1,23 @@
 <?php
 
-namespace App\Providers;
+declare(strict_types=1);
 
-use Illuminate\Support\ServiceProvider;
+namespace App\Http\Middleware;
 
-class AppServiceProvider extends ServiceProvider
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureUserIsHr
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
+    public function handle(Request $request, Closure $next): Response
     {
-        //
-    }
+        $user = $request->user();
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        //
+        if (! $user || ! $user->isHrCoordinator()) {
+            abort(403, 'Access denied. HR Coordinator privileges are required.');
+        }
+
+        return $next($request);
     }
 }

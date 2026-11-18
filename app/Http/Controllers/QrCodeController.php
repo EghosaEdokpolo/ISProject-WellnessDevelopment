@@ -5,26 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use Illuminate\Http\Response;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class QrCodeController extends Controller
 {
     /**
-     * Generate an SVG QR code for a specific event's venue check-in.
+     * Keep QR code generation on the unified Event Management page instead of opening a separate webpage.
      */
-    public function __invoke(Event $event): Response
+    public function __invoke(Request $request, Event $event): RedirectResponse
     {
-        // Points directly to the public Staff ID verification page
-        $url = route('checkin.scan', $event);
+        abort_unless($request->user()?->isHrCoordinator(), 403, 'Unauthorized access to event QR codes.');
 
-        // Generate high-res SVG for printing on posters
-        $svg = QrCode::format('svg')
-            ->size(600)
-            ->margin(2)
-            ->errorCorrection('H') // High error correction for printed posters
-            ->generate($url);
-
-        return response($svg, 200)->header('Content-Type', 'image/svg+xml');
+        return redirect()->route('events.management', ['qr_event' => $event->id]);
     }
 }

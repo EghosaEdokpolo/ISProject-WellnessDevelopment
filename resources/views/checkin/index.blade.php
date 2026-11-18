@@ -5,7 +5,8 @@
     $isHr               = $user->isHrCoordinator();
     $tz                 = (string) config('wellloop.timezone', 'Africa/Nairobi');
     $opensBeforeMinutes = (int) config('wellloop.checkin.opens_minutes_before', 60);
-    $closesAfterHours   = (int) config('wellloop.checkin.closes_hours_after', 8);
+    $lateGraceMinutes   = (int) config('wellloop.checkin.late_grace_minutes', 10);
+    $penaltyPercent     = (int) config('wellloop.checkin.late_penalty_percent', 40);
     $now                = now($tz);
 @endphp
 
@@ -31,7 +32,7 @@
         </div>
     @endif
 
-    <!-- Section 1: Pending Registrations (Gate-Controlled) -->
+    <!-- Section 1: Pending Registrations -->
     <div>
         <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div class="flex items-center gap-2.5">
@@ -39,7 +40,7 @@
                 <h1 class="text-xl font-extrabold text-slate-900">Your Registered Events</h1>
             </div>
             <span class="text-xs font-bold text-[#02338d] bg-[#e8f0fe] px-3.5 py-1.5 rounded-full">
-                Check-in gate unlocks 1 hour before each event starts
+                Gate unlocks 1 hr before start • Closes 10 mins after start
             </span>
         </div>
 
@@ -60,16 +61,23 @@
                         $ev           = $reg->event;
                         $eventStart   = $ev->starts_at->copy()->shiftTimezone($tz);
                         $gateOpensAt  = $eventStart->copy()->subMinutes($opensBeforeMinutes);
-                        $gateClosesAt = $eventStart->copy()->addHours($closesAfterHours);
+                        $gateClosesAt = $eventStart->copy()->addMinutes($lateGraceMinutes);
                         $isGateOpen   = $now->between($gateOpensAt, $gateClosesAt);
+                        $isLateGrace  = $isGateOpen && $now->gt($eventStart);
                         $isTooEarly   = $now->lt($gateOpensAt);
+                        $basePts      = (int) ($ev->points_checkin ?? 25);
+                        $latePts      = max(1, (int) round($basePts * ((100 - $penaltyPercent) / 100)));
                     @endphp
                     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
-                        <div class="h-1.5 {{ $isGateOpen ? 'bg-emerald-500' : 'bg-[#02338d]' }}"></div>
+                        <div class="h-1.5 {{ $isLateGrace ? 'bg-amber-500' : ($isGateOpen ? 'bg-emerald-500' : 'bg-[#02338d]') }}"></div>
                         <div class="p-6 flex-1 flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center justify-between gap-2 mb-3">
-                                    @if($isGateOpen)
+                                    @if($isLateGrace)
+                                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                                            Late Grace • Closes {{ $gateClosesAt->format('H:i') }}
+                                        </span>
+                                    @elseif($isGateOpen)
                                         <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                             Gate Open • Ready
                                         </span>
@@ -83,9 +91,15 @@
                                         </span>
                                     @endif
 
-                                    <span class="text-[11px] font-extrabold text-[#c99a2e] bg-amber-50 px-2.5 py-0.5 rounded-full">
-                                        +{{ $ev->points_checkin ?? 20 }} pts
-                                    </span>
+                                    @if($isLateGrace)
+                                        <span class="text-[11px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                            +{{ $latePts }} pts (-{{ $penaltyPercent }}%)
+                                        </span>
+                                    @else
+                                        <span class="text-[11px] font-extrabold text-[#c99a2e] bg-amber-50 px-2.5 py-0.5 rounded-full">
+                                            +{{ $basePts }} pts
+                                        </span>
+                                    @endif
                                 </div>
 
                                 <h2 class="text-lg font-extrabold text-slate-900">{{ $ev->name }}</h2>
@@ -96,39 +110,34 @@
                             </div>
 
                             <div class="mt-6 space-y-2.5">
-                                @if($isGateOpen)
+                                @if(! $reg->waiver)
+                                    <a href="{{ route('registrations.waiver', $reg) }}"
+                                       class="w-full block text-center bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold py-3.5 rounded-xl shadow-sm transition">
+                                        Sign Mandatory Waiver First →
+                                    </a>
+                                @elseif($isLateGrace)
                                     <a href="{{ route('registrations.ticket', $reg) }}"
-                                       class="w-full block text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3 rounded-xl shadow-sm transition">
-                                        Gate Open — Scan Venue QR Poster →
+                                       class="w-full block text-center bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold py-3.5 rounded-xl shadow-sm transition">
+                                        Late Grace Active — Scan Venue QR (+{{ $latePts }} pts) →
+                                    </a>
+                                @elseif($isGateOpen)
+                                    <a href="{{ route('registrations.ticket', $reg) }}"
+                                       class="w-full block text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3.5 rounded-xl shadow-sm transition">
+                                        Open Event Pass & Scan Venue QR →
                                     </a>
                                 @elseif($isTooEarly)
                                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center text-[11px] text-slate-600 font-bold">
                                         Gate opens {{ $gateOpensAt->format('D, d M \a\t H:i') }} EAT (1 hr before start)
                                     </div>
+                                    <a href="{{ route('registrations.ticket', $reg) }}"
+                                       class="w-full block text-center bg-[#e8f0fe] hover:bg-blue-100 text-[#02338d] text-xs font-extrabold py-3 rounded-xl transition">
+                                        View Event Pass & Countdown
+                                    </a>
                                 @else
                                     <div class="bg-rose-50 border border-rose-200 rounded-xl p-3 text-center text-[11px] text-rose-700 font-bold">
-                                        Check-in window closed
+                                        Check-in gate closed at {{ $gateClosesAt->format('H:i') }} EAT
                                     </div>
                                 @endif
-
-                                <div class="grid grid-cols-2 gap-2">
-                                    @if(! $reg->waiver)
-                                        <a href="{{ route('registrations.waiver', $reg) }}"
-                                           class="text-center bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-extrabold py-2.5 rounded-xl transition">
-                                            Sign Waiver
-                                        </a>
-                                    @else
-                                        <a href="{{ route('events.index') }}"
-                                           class="text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold py-2.5 rounded-xl transition">
-                                            Events Hub
-                                        </a>
-                                    @endif
-
-                                    <a href="{{ route('registrations.ticket', $reg) }}"
-                                       class="text-center bg-[#e8f0fe] hover:bg-blue-100 text-[#02338d] text-xs font-extrabold py-2.5 rounded-xl transition">
-                                        Event Pass
-                                    </a>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -147,7 +156,10 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($pastCheckIns as $reg)
-                    @php $ev = $reg->event; @endphp
+                    @php
+                        $ev                = $reg->event;
+                        $feedbackSubmitted = $reg->status === 'completed' || $reg->feedback !== null;
+                    @endphp
                     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between gap-2 mb-3">
@@ -163,10 +175,19 @@
                         </div>
 
                         <div class="mt-5">
-                            <a href="{{ route('feedback.create', $reg) }}"
-                               class="w-full block text-center bg-[#02338d] hover:bg-[#01225e] text-white text-xs font-extrabold py-3 rounded-xl transition">
-                                {{ $reg->status === 'completed' ? 'Update Post-Event Feedback' : 'Complete Post-Event Feedback →' }}
-                            </a>
+                            @if($feedbackSubmitted)
+                                <div class="w-full flex items-center justify-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-extrabold py-3 rounded-xl">
+                                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span>Post-Event Feedback Submitted</span>
+                                </div>
+                            @else
+                                <a href="{{ route('feedback.create', $reg) }}"
+                                   class="w-full block text-center bg-[#02338d] hover:bg-[#01225e] text-white text-xs font-extrabold py-3 rounded-xl transition">
+                                    Complete Post-Event Feedback →
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -215,7 +236,7 @@
             <div class="lg:col-span-8 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
                 <h2 class="text-lg font-extrabold text-slate-900">Printable Venue QR Posters</h2>
                 <p class="text-xs text-slate-500 mt-0.5 mb-6">
-                    Print the QR poster for the venue door—staff scan it with their phones within 1 hour of start time to check in automatically.
+                    Print the QR poster for the venue door—gate opens 1 hour before start and closes 10 minutes after start.
                 </p>
 
                 <div class="divide-y divide-slate-100">

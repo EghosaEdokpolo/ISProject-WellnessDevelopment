@@ -2,200 +2,159 @@
 
 @section('content')
 @php
-    $tz           = $tz ?? (string) config('wellloop.timezone', 'Africa/Nairobi');
-    $eventStart   = $event->starts_at->copy()->shiftTimezone($tz);
-    $capacity     = max(1, (int) ($event->capacity ?? 80));
-    $pct          = min(100, (int) round(($checkedInCount / $capacity) * 100));
-    $gateStatus   = $gate['status'] ?? 'locked';
-    $rows         = $registrations ?? collect();
+    $eventStart = $event->starts_at ? $event->starts_at->copy()->shiftTimezone($tz) : now($tz);
 @endphp
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
-<style>
-    .su-brand-scope, .su-brand-scope * {
-        font-family: 'Montserrat', sans-serif;
-    }
-</style>
+<div class="max-w-7xl mx-auto space-y-5 sm:space-y-6">
 
-<div class="su-brand-scope max-w-6xl mx-auto space-y-6">
-
-    <!-- Top Navigation & Live EAT Clock -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <a href="{{ route('events.management') }}"
-           class="text-xs font-extrabold text-[#02338d] hover:underline inline-flex items-center gap-1.5">
-            ← Back to Event Management
-        </a>
-
-        <div class="flex items-center gap-2 bg-white border border-slate-200 px-3.5 py-2 rounded-xl shadow-sm text-xs font-bold text-slate-700">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span id="live-eat-clock">{{ now($tz)->format('D, d M Y • H:i:s') }} EAT</span>
+    <!-- Top Navigation & Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <a href="{{ route('events.management') }}" class="text-xs font-extrabold text-[#02338d] hover:underline">
+                ← Back to All Wellness Events
+            </a>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
+                Session Attendance Register
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                {{ $event->name }} · {{ $eventStart->format('D, d M Y \a\t h:i A') }} EAT · {{ $event->location }}
+            </p>
         </div>
-    </div>
 
-    <!-- Session Header Banner -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="h-1.5 bg-gradient-to-r from-[#02338d] via-[#02338d] to-[#c99a2e]"></div>
-        <div class="p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div>
-                <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#02338d] bg-[#e8f0fe] px-3 py-1 rounded-full">
-                        {{ strtoupper($event->category) }} • Session Attendance Monitor
-                    </span>
-
-                    @if($gateStatus === 'open_on_time')
-                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Gate Open (On Time)
-                        </span>
-                    @elseif($gateStatus === 'late_grace')
-                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                            10-Min Late Grace Active
-                        </span>
-                    @elseif($gateStatus === 'locked')
-                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                            Upcoming • Gate Locked
-                        </span>
-                    @else
-                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                            Session Concluded • Gate Closed
-                        </span>
-                    @endif
-                </div>
-
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ $event->name }}</h1>
-                <p class="text-xs text-slate-500 italic mt-1">
-                    {{ $eventStart->format('l, d M Y \a\t H:i') }} EAT • {{ $event->location }}
-                </p>
+        <div class="grid grid-cols-2 sm:flex items-center gap-3">
+            <div class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-center shadow-sm">
+                <span class="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Checked In</span>
+                <span class="text-base font-extrabold text-emerald-600">{{ $checkedInCount }}</span>
             </div>
-
-            <!-- KPI Metrics -->
-            <div class="grid grid-cols-3 gap-3 shrink-0">
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-center">
-                    <span class="block text-[10px] font-extrabold uppercase text-slate-400">Registered</span>
-                    <span class="text-xl font-extrabold text-slate-900">{{ $registeredCount }}</span>
-                </div>
-                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 text-center">
-                    <span class="block text-[10px] font-extrabold uppercase text-emerald-700">Checked In</span>
-                    <span class="text-xl font-extrabold text-emerald-800">{{ $checkedInCount }}</span>
-                </div>
-                <div class="bg-[#e8f0fe] border border-blue-200 rounded-2xl px-4 py-3 text-center">
-                    <span class="block text-[10px] font-extrabold uppercase text-[#02338d]">Turnout</span>
-                    <span class="text-xl font-extrabold text-[#02338d]">{{ $pct }}%</span>
-                </div>
+            <div class="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-center shadow-sm">
+                <span class="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Registered</span>
+                <span class="text-base font-extrabold text-[#02338d]">{{ $registeredCount }}</span>
             </div>
         </div>
     </div>
 
-    <!-- Attendee Check-In & WHO-5 Completion Table -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <h2 class="text-base font-extrabold text-slate-900">Staff Attendance & WHO-5 Status</h2>
-                <p class="text-xs text-slate-500">Verified gate entries, check-in timestamps (EAT), and Post-WHO completion status.</p>
-            </div>
-
-            @if($gateStatus !== 'closed')
-                <a href="{{ route('events.qr.poster', $event) }}"
-                   target="_blank"
-                   class="text-xs font-extrabold bg-[#c99a2e] hover:bg-yellow-500 text-[#01225e] px-4 py-2.5 rounded-xl shadow-sm transition">
-                    Open Venue QR Poster →
-                </a>
-            @endif
+    @if(session('confirmed'))
+        <div class="bg-emerald-50 text-emerald-800 px-5 py-4 rounded-2xl text-xs font-extrabold border border-emerald-200 shadow-sm">
+            {{ is_string(session('confirmed')) ? session('confirmed') : 'Staff check-in verified successfully.' }}
         </div>
+    @endif
 
-        @if($rows->isEmpty())
-            <div class="p-10 text-center">
-                <p class="text-sm font-extrabold text-slate-700">No registrations recorded for this session.</p>
-                <p class="text-xs text-slate-500 mt-1">Staff registrations and venue QR scans will appear here automatically.</p>
+    @if($errors->any())
+        <div class="bg-rose-50 text-rose-700 px-5 py-4 rounded-2xl text-xs font-extrabold border border-rose-200 shadow-sm">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
+    <!-- Search Bar -->
+    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <form method="GET" action="{{ route('checkin.scan', $event) }}" class="flex flex-col sm:flex-row gap-2.5">
+            <div class="relative flex-1 min-w-0">
+                <input type="search"
+                       name="search"
+                       enterkeyhint="search"
+                       value="{{ $search ?? request('search') }}"
+                       placeholder="Search Staff ID (e.g. 000004), Name, or Dept..."
+                       class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 pl-9 pr-3 py-2.5 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
             </div>
-        @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                            <th class="py-3.5 px-6">Staff Member</th>
-                            <th class="py-3.5 px-4">Staff ID</th>
-                            <th class="py-3.5 px-4">Check-In Status</th>
-                            <th class="py-3.5 px-4">Verified At (EAT)</th>
-                            <th class="py-3.5 px-6 text-right">Post-WHO Feedback</th>
+
+            <div class="flex items-center gap-2">
+                <button type="submit"
+                        class="flex-1 sm:flex-none bg-[#02338d] hover:bg-[#01225e] text-white px-5 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition">
+                    Search
+                </button>
+
+                @if(!empty($search))
+                    <a href="{{ route('checkin.scan', $event) }}"
+                       class="px-4 py-2.5 rounded-xl text-xs font-extrabold text-[#e03c31] bg-rose-50 border border-rose-200 hover:bg-rose-100 transition">
+                        Clear
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
+    <!-- Attendance Table (Compact Sticky Staff ID Column + Mobile Scroll) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="sm:hidden px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 flex items-center justify-between">
+            <span>Ordered ID 1 → Last</span>
+            <span>← Swipe table horizontally →</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[680px] text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#02338d] text-white text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap">
+                        <th class="sticky left-0 z-20 bg-[#02338d] px-3.5 sm:px-4 py-3.5 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.3)] min-w-[82px] sm:min-w-[115px]">Staff ID</th>
+                        <th class="px-4 py-3.5">Staff Member</th>
+                        <th class="px-4 py-3.5">School / Department</th>
+                        <th class="px-3 py-3.5 text-center">Waiver</th>
+                        <th class="px-4 py-3.5 text-center">Check-In Time</th>
+                        <th class="px-4 py-3.5 text-right">Status / Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                    @forelse($registrations as $reg)
+                        @php
+                            $isCheckedIn = $reg->checkIn !== null || in_array($reg->status, ['checked_in', 'completed'], true);
+                            $initial     = strtoupper(mb_substr(trim((string) $reg->user->name), 0, 1));
+                        @endphp
+                        <tr class="group hover:bg-[#f6f8fc] transition-colors">
+                            <td class="sticky left-0 z-10 bg-white group-hover:bg-[#f6f8fc] px-3.5 sm:px-4 py-3.5 font-extrabold text-[#02338d] whitespace-nowrap border-r border-slate-100 shadow-[4px_0_8px_-4px_rgba(2,51,141,0.1)]">
+                                {{ $reg->user->staff_id }}
+                            </td>
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full bg-[#e8f0fe] text-[#02338d] font-extrabold text-[11px] flex items-center justify-center overflow-hidden shrink-0">
+                                        @if(!empty($reg->user->profile_photo_path))
+                                            <img src="{{ asset($reg->user->profile_photo_path) }}" alt="{{ $reg->user->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            {{ $initial }}
+                                        @endif
+                                    </div>
+                                    <span class="font-extrabold text-slate-900">{{ $reg->user->name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3.5 text-slate-600 font-semibold whitespace-nowrap">
+                                {{ $reg->user->department }}
+                            </td>
+                            <td class="px-3 py-3.5 text-center whitespace-nowrap">
+                                @if($reg->waiver || $reg->consent_given)
+                                    <span class="text-emerald-600 font-extrabold">Signed ✓</span>
+                                @else
+                                    <span class="text-amber-600 font-bold">Pending</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3.5 text-center text-slate-600 font-semibold whitespace-nowrap">
+                                {{ $reg->checkIn?->checked_in_at?->copy()->setTimezone($tz)->format('h:i A, d M') ?? '—' }}
+                            </td>
+                            <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                                @if($isCheckedIn)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {{ $reg->status === 'completed' ? 'Completed ✓' : 'Checked In ✓' }}
+                                    </span>
+                                @else
+                                    <form method="POST" action="{{ route('checkin.confirm', $reg) }}" class="inline">
+                                        @csrf
+                                        <button type="submit"
+                                                class="bg-[#02338d] hover:bg-[#01225e] text-white text-[11px] font-extrabold px-3 py-1.5 rounded-lg transition">
+                                            Verify Check-In
+                                        </button>
+                                    </form>
+                                @endif
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs">
-                        @foreach($rows as $reg)
-                            @php
-                                $attendee   = $reg->user;
-                                $checkedIn  = $reg->checkIn !== null;
-                                $postDone   = $reg->status === 'completed' || $reg->feedback !== null;
-                            @endphp
-                            <tr class="hover:bg-slate-50/70 transition">
-                                <td class="py-3.5 px-6 font-extrabold text-slate-900">
-                                    {{ $attendee?->name ?? 'Unknown Staff' }}
-                                    <span class="block text-[11px] font-normal text-slate-400">{{ $attendee?->department ?? 'Strathmore University' }}</span>
-                                </td>
-                                <td class="py-3.5 px-4 font-bold text-slate-700">
-                                    {{ $attendee?->staff_id ?? '—' }}
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    @if($checkedIn)
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            Checked In ({{ strtoupper($reg->checkIn->method ?? 'QR') }})
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-                                            Absent / Not Scanned
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="py-3.5 px-4 font-semibold text-slate-600">
-                                    @if($checkedIn)
-                                        {{ $reg->checkIn->checked_in_at->copy()->shiftTimezone($tz)->format('d M Y, H:i:s') }}
-                                    @else
-                                        —
-                                    @endif
-                                </td>
-                                <td class="py-3.5 px-6 text-right">
-                                    @if($postDone)
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-50 text-[#02338d] border border-blue-200">
-                                            Submitted ✓
-                                        </span>
-                                    @elseif($checkedIn)
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
-                                            Pending
-                                        </span>
-                                    @else
-                                        <span class="text-[11px] text-slate-400">N/A</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-slate-500 font-bold">
+                                No staff attendance records match your search.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const clockEl = document.getElementById('live-eat-clock');
-        if (!clockEl) return;
-
-        setInterval(function () {
-            const now = new Date();
-            const formatted = now.toLocaleString('en-GB', {
-                timeZone: 'Africa/Nairobi',
-                weekday: 'short',
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            }).replace(',', ' •');
-            clockEl.textContent = formatted + ' EAT';
-        }, 1000);
-    });
-</script>
-@endpush

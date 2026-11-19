@@ -60,6 +60,9 @@
                     Upcoming Event • Full Edit Mode
                 </span>
             @endif
+            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-[#f5eccd]/70 text-[#8a6514] border border-[#c99a2e]/30 px-3 py-1 rounded-full">
+                Session ID #{{ $event->id }}
+            </span>
         </div>
     </div>
 
@@ -308,16 +311,53 @@
                               class="w-full border border-slate-200 rounded-xl text-xs font-semibold text-[#1d1d1b] p-3 bg-slate-50 focus:bg-white focus:ring-[#02338d] focus:border-[#02338d]">{{ old('description', $event->description) }}</textarea>
                 </div>
 
-                <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
-                    <a href="{{ route('events.management') }}"
-                       class="text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-3.5 rounded-xl transition">
-                        Cancel
-                    </a>
+                <!-- Action Bar with Cancel, Delete Session, and Update -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                    <div class="flex items-center gap-2.5">
+                        <a href="{{ route('events.management') }}"
+                           class="text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-3.5 rounded-xl transition">
+                            Cancel
+                        </a>
+
+                        <button type="button"
+                                onclick="document.getElementById('delete-event-modal').classList.remove('hidden')"
+                                class="text-xs font-extrabold bg-rose-50 hover:bg-[#e03c31] text-[#e03c31] hover:text-white border border-rose-200 hover:border-[#e03c31] px-4 py-3.5 rounded-xl transition inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            <span>Delete Session</span>
+                        </button>
+                    </div>
+
                     <button type="submit"
                             class="bg-[#02338d] hover:bg-[#012466] text-white text-xs font-extrabold px-6 py-3.5 rounded-xl shadow-sm transition">
                         {{ $isPast ? 'Save Text Corrections' : 'Update Wellness Session' }}
                     </button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Safe Delete Confirmation Modal (Outside Update Form to Prevent Nested Forms) -->
+    <div id="delete-event-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border border-slate-200 max-w-md w-full p-6 sm:p-7 shadow-xl">
+            <h3 class="text-lg font-extrabold text-slate-900">Delete Wellness Session?</h3>
+            <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                Are you sure you want to permanently delete <strong>"{{ $event->name }}"</strong>? All registrations, check-ins, and WHO-5 responses attached to this session will be removed, and affected staff point balances will be automatically recalculated.
+            </p>
+
+            <form method="POST" action="{{ route('events.destroy', $event) }}" class="mt-6 flex items-center justify-end gap-2.5">
+                @csrf
+                @method('DELETE')
+                <button type="button"
+                        onclick="document.getElementById('delete-event-modal').classList.add('hidden')"
+                        class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-5 py-2.5 rounded-xl bg-[#e03c31] hover:bg-red-700 text-white text-xs font-extrabold shadow-sm transition">
+                    Yes, Delete Permanently
+                </button>
             </form>
         </div>
     </div>

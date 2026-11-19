@@ -28,10 +28,6 @@
             'category'    => 'Physical Wellness',
         ],
     ];
-
-    $activeDeptLabel = ($selectedDept ?? $me->department) === 'all'
-        ? 'All Strathmore University Staff'
-        : ($selectedDept ?? $me->department);
 @endphp
 
 <div class="max-w-7xl mx-auto space-y-8">
@@ -63,7 +59,7 @@
                     Wellness Rewards & Standing
                 </h1>
                 <p class="text-xs text-slate-500 mt-1">
-                    Earn points by registering (+5), checking in at the venue (+25), and submitting Post-Event WHO-5 reflections (+10).
+                    Earn points by registering (+5), arriving on time at the venue (100% pts; 50% within 15 min grace), and submitting Post-Event WHO-5 reflections.
                 </p>
             </div>
 
@@ -89,10 +85,10 @@
         </div>
     </div>
 
-    <!-- Main Grid: Rewards Catalog + Department Leaderboard & Live Recent Activity -->
+    <!-- Main Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        <!-- Left 7 Cols: Redeemable Rewards Catalog & Department Leaderboard -->
+        <!-- Left 7 Cols: Rewards Catalog & Own-School Department Leaderboard -->
         <div class="lg:col-span-7 space-y-6">
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7">
                 <h2 class="text-lg font-extrabold text-slate-900 mb-1">Redeemable Campus Rewards</h2>
@@ -132,7 +128,7 @@
                 </div>
             </div>
 
-            <!-- Department Leaderboard (Matches Photos 2 & 3 with Department Selector) -->
+            <!-- Own-School / Department Leaderboard Only (Q1) -->
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="bg-[#c99a2e] text-white px-6 py-5 text-center">
                     <div class="flex items-center justify-center gap-2">
@@ -143,33 +139,8 @@
                     </div>
 
                     <p class="text-xs font-bold text-amber-50 mt-0.5">
-                        {{ $activeDeptLabel }}
+                        {{ $me->department ?? 'Your School / Department' }}
                     </p>
-                    <p class="text-[10px] text-amber-100/90 mt-1">
-                        Logged in as: <strong>{{ $me->name }}</strong> ({{ $me->department }})
-                    </p>
-
-                    @if(!empty($allDepartments))
-                        <form method="GET" action="{{ route('rewards.index') }}" class="mt-3 max-w-xs mx-auto">
-                            <select name="dept"
-                                    onchange="this.form.submit()"
-                                    class="w-full bg-white/95 text-[#1d1d1b] text-xs font-extrabold rounded-xl px-3 py-1.5 border-0 shadow-sm focus:ring-2 focus:ring-[#02338d]">
-                                <option value="{{ $me->department }}" @selected(($selectedDept ?? $me->department) === $me->department)>
-                                    My Department ({{ $me->department }})
-                                </option>
-                                <option value="all" @selected(($selectedDept ?? '') === 'all')>
-                                    All University Departments
-                                </option>
-                                @foreach($allDepartments as $deptName)
-                                    @if($deptName !== $me->department)
-                                        <option value="{{ $deptName }}" @selected(($selectedDept ?? '') === $deptName)>
-                                            {{ $deptName }}
-                                        </option>
-                                    @endif
-                                @endforeach
-                            </select>
-                        </form>
-                    @endif
                 </div>
 
                 <div class="divide-y divide-slate-100">
@@ -186,20 +157,18 @@
                         @endphp
                         <div class="px-6 py-4 flex items-center justify-between text-xs {{ $isMe ? 'bg-[#e8f0fe]/70' : 'bg-white' }}">
                             <div class="flex items-center gap-3.5">
-                                <span class="w-5 text-center font-extrabold text-slate-400">
-                                    {{ $idx + 1 }}
-                                </span>
-                                <div class="w-9 h-9 rounded-full {{ $avatarBg }} font-extrabold flex items-center justify-center text-xs shrink-0">
-                                    {{ $initial }}
+                                <span class="w-5 text-center font-extrabold text-slate-400">{{ $idx + 1 }}</span>
+                                <div class="w-9 h-9 rounded-full {{ $avatarBg }} font-extrabold flex items-center justify-center text-xs shrink-0 overflow-hidden">
+                                    @if(!empty($colleague->profile_photo_path))
+                                        <img src="{{ asset($colleague->profile_photo_path) }}" alt="{{ $colleague->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        {{ $initial }}
+                                    @endif
                                 </div>
                                 <div>
                                     <span class="font-extrabold text-slate-900 block">{{ $colleague->name }}</span>
                                     @if($isMe)
-                                        <span class="inline-block text-[9px] font-extrabold uppercase bg-blue-100 text-[#02338d] px-2 py-0.5 rounded mt-0.5">
-                                            YOU
-                                        </span>
-                                    @elseif(($selectedDept ?? '') === 'all')
-                                        <span class="text-[10px] text-slate-400">{{ $colleague->department }}</span>
+                                        <span class="inline-block text-[9px] font-extrabold uppercase bg-blue-100 text-[#02338d] px-2 py-0.5 rounded mt-0.5">YOU</span>
                                     @endif
                                 </div>
                             </div>
@@ -212,7 +181,7 @@
             </div>
         </div>
 
-        <!-- Right 5 Cols: Live & Accurate Recent Activity -->
+        <!-- Right 5 Cols: Live Recent Activity -->
         <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                 <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Recent Activity</h2>
@@ -234,29 +203,15 @@
                         <div class="px-6 py-4 flex items-center justify-between gap-4 hover:bg-slate-50/70 transition">
                             <div class="flex items-start gap-3.5 min-w-0">
                                 <div class="w-10 h-10 rounded-2xl {{ $isPositive ? 'bg-emerald-50 text-emerald-600 border border-emerald-200/70' : 'bg-amber-50 text-amber-700 border border-amber-200/70' }} flex items-center justify-center shrink-0">
-                                    @if($item['reason'] === 'attended_event')
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                    @elseif($item['reason'] === 'feedback_submitted')
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    @elseif(! $isPositive)
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
-                                    @else
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"></path></svg>
-                                    @endif
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
 
                                 <div class="min-w-0">
-                                    <p class="text-xs font-extrabold text-slate-900 truncate">
-                                        {{ $item['title'] }}
-                                    </p>
+                                    <p class="text-xs font-extrabold text-slate-900 truncate">{{ $item['title'] }}</p>
                                     @if(!empty($item['event_name']))
-                                        <p class="text-[11px] font-bold text-[#02338d] truncate mt-0.5">
-                                            {{ $item['event_name'] }}
-                                        </p>
+                                        <p class="text-[11px] font-bold text-[#02338d] truncate mt-0.5">{{ $item['event_name'] }}</p>
                                     @endif
-                                    <p class="text-[11px] text-slate-400 font-semibold mt-0.5">
-                                        {{ $item['date_str'] }} EAT
-                                    </p>
+                                    <p class="text-[11px] text-slate-400 font-semibold mt-0.5">{{ $item['date_str'] }} EAT</p>
                                 </div>
                             </div>
 

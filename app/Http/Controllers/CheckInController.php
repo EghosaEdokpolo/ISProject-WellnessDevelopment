@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\CheckIn;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\User;
@@ -27,7 +26,7 @@ class CheckInController extends Controller
     {
         $user             = $request->user();
         $tz               = (string) config('wellloop.timezone', 'Africa/Nairobi');
-        $lateGraceMinutes = (int) config('wellloop.checkin.late_grace_minutes', 10);
+        $lateGraceMinutes = (int) config('wellloop.checkin.late_grace_minutes', 15);
         $cutoff           = now($tz)->subMinutes($lateGraceMinutes);
 
         $registrations = Registration::with(['event', 'waiver', 'checkIn', 'feedback'])
@@ -36,7 +35,6 @@ class CheckInController extends Controller
             ->filter(fn (Registration $registration): bool => $registration->event !== null)
             ->values();
 
-        // Auto-sync digital waiver for any registration where consent_given was already set (e.g. seeded records)
         foreach ($registrations as $reg) {
             if (! $reg->waiver && $reg->consent_given) {
                 $waiver = Waiver::firstOrCreate(
@@ -50,7 +48,6 @@ class CheckInController extends Controller
             }
         }
 
-        // Only show upcoming or currently open events under "Your Registered Events" (Fixes Photo 1)
         $activeRegistrations = $registrations
             ->filter(function (Registration $registration) use ($tz, $cutoff): bool {
                 if ($registration->checkIn !== null || in_array($registration->status, ['checked_in', 'completed'], true)) {
@@ -89,17 +86,43 @@ class CheckInController extends Controller
         return view('events.qr_poster', compact('event', 'scanUrl'));
     }
 
+    /**
+     * Handles:
+     * 1. HR Coordinator unsigned Attendance Monitor (ordered Staff ID 1 -> last + search)
+     * 2. Unauthenticated guest venue QR scans -> Staff ID verification page (zero login redirect)
+     * 3. Authenticated staff venue QR scans -> immediate check-in
+     */
     public function scan(Request $request, Event $event): View
     {
-        $user = $request->user();
-        $tz   = (string) config('wellloop.timezone', 'Africa/Nairobi');
-        $gate = $this->checkInService->evaluateGateStatus($event);
+        $user        = $request->user();
+        $tz          = (string) config('wellloop.timezone', 'Africa/Nairobi');
+        $gate        = $this->checkInService->evaluateGateStatus($event);
+        $validSigned = $this->hasValidQrSignature($request);
 
-        if ($user->isHrCoordinator() && ! $request->hasValidSignature()) {
-            $registrations = Registration::with(['user', 'checkIn', 'waiver', 'feedback'])
+        // Logged-in HR Coordinator accessing Attendance Monitor
+        if ($user !== null && $user->isHrCoordinator() && ! $validSigned) {
+            $search = trim((string) $request->query('search', ''));
+
+            $query = Registration::with(['user', 'checkIn', 'waiver', 'feedback'])
                 ->where('event_id', $event->id)
-                ->get()
-                ->sortByDesc(fn (Registration $reg) => $reg->checkIn?->checked_in_at?->timestamp ?? 0)
+                ->whereHas('user');
+
+            if ($search !== '') {
+                $query->whereHas('user', function ($q) use ($search): void {
+                    $q->where(fn ($sub) => $sub
+                        ->where('staff_id', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('department', 'like', "%{$search}%"));
+                });
+            }
+
+            $registrations = $query->get()
+                ->sort(function (Registration $a, Registration $b): int {
+                    return strnatcasecmp(
+                        (string) ($a->user->staff_id ?? ''),
+                        (string) ($b->user->staff_id ?? '')
+                    );
+                })
                 ->values();
 
             $checkedInCount  = $registrations->filter(fn (Registration $r) => $r->checkIn !== null || in_array($r->status, ['checked_in', 'completed'], true))->count();
@@ -112,12 +135,27 @@ class CheckInController extends Controller
                 'registrations'   => $registrations,
                 'checkedInCount'  => $checkedInCount,
                 'registeredCount' => $registeredCount,
+                'search'          => $search,
                 'myRegistration'  => null,
             ]);
         }
 
-        abort_unless($request->hasValidSignature(), 403, 'Please scan the official QR poster at the event venue to check in.');
+        // All venue QR scans require a valid signed URL from the official poster
+        abort_unless($validSigned, 403, 'Please scan the official QR poster at the event venue to check in.');
 
+        // Guest (Not Logged In): Verify via Strathmore Staff ID without login conflict
+        if ($user === null) {
+            return view('events.qr_guest_checkin', [
+                'event'     => $event,
+                'gate'      => $gate,
+                'verifyUrl' => URL::signedRoute('checkin.scan.verify', ['event' => $event->id]),
+                'outcome'   => null,
+                'attendee'  => null,
+                'scanError' => null,
+            ]);
+        }
+
+        // Already Logged-In Staff Member: Process immediately
         try {
             $outcome = $this->checkInService->processVenueQrScan($user, $event);
 
@@ -143,7 +181,7 @@ class CheckInController extends Controller
                 'pointsEarned'     => 0,
                 'isLate'           => false,
                 'minutesLate'      => 0,
-                'basePoints'       => (int) ($event->points_checkin ?? 25),
+                'basePoints'       => (int) ($event->points_checkin ?? 20),
                 'pointsReducedBy'  => 0,
                 'needsOnboarding'  => false,
                 'scanError'        => $e->getMessage(),
@@ -163,10 +201,78 @@ class CheckInController extends Controller
                 'pointsEarned'     => 0,
                 'isLate'           => false,
                 'minutesLate'      => 0,
-                'basePoints'       => (int) ($event->points_checkin ?? 25),
+                'basePoints'       => (int) ($event->points_checkin ?? 20),
                 'pointsReducedBy'  => 0,
                 'needsOnboarding'  => false,
                 'scanError'        => 'We could not complete your check-in right now. Please notify the People & Culture desk at the venue.',
+            ]);
+        }
+    }
+
+    /**
+     * Verify Staff ID against MySQL users table for unauthenticated venue QR scans.
+     */
+    public function verifyStaffScan(Request $request, Event $event): View|RedirectResponse
+    {
+        abort_unless($this->hasValidQrSignature($request), 403, 'Invalid or expired venue QR check-in signature.');
+
+        $gate      = $this->checkInService->evaluateGateStatus($event);
+        $verifyUrl = URL::signedRoute('checkin.scan.verify', ['event' => $event->id]);
+
+        $data = $request->validate([
+            'staff_id' => ['required', 'string', 'max:50'],
+        ], [
+            'staff_id.required' => 'Please enter your Strathmore Staff ID to verify your attendance.',
+        ]);
+
+        $normalizedStaffId = strtolower(trim($data['staff_id']));
+        $attendee          = User::whereRaw('LOWER(staff_id) = ?', [$normalizedStaffId])->first();
+
+        if (! $attendee) {
+            return view('events.qr_guest_checkin', [
+                'event'     => $event,
+                'gate'      => $gate,
+                'verifyUrl' => $verifyUrl,
+                'outcome'   => null,
+                'attendee'  => null,
+                'scanError' => 'Staff ID "' . e($data['staff_id']) . '" was not found in the Strathmore University directory. Please verify your Staff ID and try again.',
+            ]);
+        }
+
+        try {
+            $outcome = $this->checkInService->processVenueQrScan($attendee, $event);
+
+            return view('events.qr_guest_checkin', [
+                'event'     => $event,
+                'gate'      => $gate,
+                'verifyUrl' => $verifyUrl,
+                'outcome'   => $outcome,
+                'attendee'  => $attendee->fresh(),
+                'scanError' => null,
+            ]);
+        } catch (RuntimeException $e) {
+            return view('events.qr_guest_checkin', [
+                'event'     => $event,
+                'gate'      => $gate,
+                'verifyUrl' => $verifyUrl,
+                'outcome'   => null,
+                'attendee'  => $attendee,
+                'scanError' => $e->getMessage(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Unexpected failure during guest Staff ID QR check-in', [
+                'staff_id' => $normalizedStaffId,
+                'event_id' => $event->id,
+                'error'    => $e->getMessage(),
+            ]);
+
+            return view('events.qr_guest_checkin', [
+                'event'     => $event,
+                'gate'      => $gate,
+                'verifyUrl' => $verifyUrl,
+                'outcome'   => null,
+                'attendee'  => $attendee,
+                'scanError' => 'We could not complete your check-in right now. Please notify the People & Culture desk at the venue.',
             ]);
         }
     }
@@ -281,5 +387,13 @@ class CheckInController extends Controller
             'attendee'     => $registration->user,
             'gate'         => $gate,
         ]);
+    }
+
+    /**
+     * Validates both absolute and relative signatures to handle HTTPS reverse proxies (Cloudflare Tunnel).
+     */
+    private function hasValidQrSignature(Request $request): bool
+    {
+        return $request->hasValidSignature() || $request->hasValidRelativeSignature();
     }
 }

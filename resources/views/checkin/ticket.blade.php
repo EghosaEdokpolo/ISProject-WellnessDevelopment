@@ -2,22 +2,24 @@
 
 @section('content')
 @php
-    $tz = (string) config('wellloop.timezone', 'Africa/Nairobi');
+    $tz        = (string) config('wellloop.timezone', 'Africa/Nairobi');
+    $graceMins = (int) config('wellloop.checkin.late_grace_minutes', 15);
 
     $eventStart   = $gate['starts_at'];
     $gateOpensAt  = $gate['opens_at'];
     $gateClosesAt = $gate['closes_at'];
 
-    $isCheckedIn  = $registration->checkIn !== null || in_array($registration->status, ['checked_in', 'completed'], true);
-    $isGateOpen   = ! $isCheckedIn && $gate['is_open'];
-    $isLateGrace  = ! $isCheckedIn && $gate['status'] === 'late_grace';
-    $isTooEarly   = ! $isCheckedIn && $gate['status'] === 'locked';
+    $isCheckedIn = $registration->checkIn !== null || in_array($registration->status, ['checked_in', 'completed'], true);
+    $isGateOpen  = ! $isCheckedIn && $gate['is_open'];
+    $isLateGrace = ! $isCheckedIn && $gate['status'] === 'late_grace';
+    $isTooEarly  = ! $isCheckedIn && $gate['status'] === 'locked';
 
     $basePoints      = $gate['base_points'];
     $awardedPoints   = $gate['awarded_points'];
     $pointsReducedBy = $gate['points_reduced_by'];
     $penaltyPercent  = $gate['penalty_percent'];
     $minutesLate     = $gate['minutes_late'];
+    $halfPoints      = $basePoints > 0 ? max(1, (int) round($basePoints * ((100 - $penaltyPercent) / 100))) : 0;
 
     $whatsappUrl = $event->whatsapp_channel_url;
 @endphp
@@ -29,7 +31,7 @@
             ← Back to Events
         </a>
         <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
-            Gate: -1 Hr to +10 Min
+            Gate: -1 Hr to +{{ $graceMins }} Min
         </span>
     </div>
 
@@ -53,7 +55,7 @@
                 </p>
             </div>
 
-            <!-- Ticket Details (Pass Code Removed — Uses Staff ID Only) -->
+            <!-- Ticket Details (Uses Staff ID Only) -->
             <div class="py-5 space-y-3 text-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-xs text-slate-400 italic">Attendee</span>
@@ -91,7 +93,7 @@
                 </div>
             </div>
 
-            <!-- Event WhatsApp Channel / Group Button (If Configured by HR) -->
+            <!-- Event WhatsApp Channel / Group Button -->
             @if(!empty($whatsappUrl))
                 <div class="mb-5">
                     <a href="{{ $whatsappUrl }}"
@@ -106,24 +108,24 @@
                 </div>
             @endif
 
-            <!-- Visual Arrival & Points Tier Gauge -->
+            <!-- Visual Arrival & Points Tier Gauge (1 Hr Before = 100%, +15 Min = 50%, +16 Min = 0) -->
             @if(! $isCheckedIn)
                 <div class="mb-5 bg-slate-50 border border-slate-200 rounded-2xl p-4">
                     <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
                         <span>Attendance Points Schedule</span>
-                        <span>10-Min Late Allowance</span>
+                        <span>{{ $graceMins }}-Min Late Allowance (50% Pts)</span>
                     </div>
 
                     <div class="grid grid-cols-3 gap-1.5 text-center">
                         <div class="rounded-xl p-2.5 border {{ (! $isLateGrace && $isGateOpen) || $isTooEarly ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-500/20' : 'bg-white border-slate-200 opacity-60' }}">
-                            <span class="block text-[9px] font-extrabold uppercase text-emerald-700">On Time</span>
+                            <span class="block text-[9px] font-extrabold uppercase text-emerald-700">On Time (100%)</span>
                             <span class="block text-sm font-extrabold text-emerald-900 mt-0.5">+{{ $basePoints }} pts</span>
                             <span class="block text-[9px] text-slate-500 mt-0.5">{{ $gateOpensAt->format('H:i') }}–{{ $eventStart->format('H:i') }}</span>
                         </div>
 
                         <div class="rounded-xl p-2.5 border {{ $isLateGrace ? 'bg-amber-50 border-amber-400 ring-2 ring-amber-500/20' : 'bg-white border-slate-200 opacity-75' }}">
-                            <span class="block text-[9px] font-extrabold uppercase text-amber-700">Late (-{{ $penaltyPercent }}%)</span>
-                            <span class="block text-sm font-extrabold text-amber-900 mt-0.5">+{{ max(1, (int) round($basePoints * ((100 - $penaltyPercent) / 100))) }} pts</span>
+                            <span class="block text-[9px] font-extrabold uppercase text-amber-700">Late (50%)</span>
+                            <span class="block text-sm font-extrabold text-amber-900 mt-0.5">+{{ $halfPoints }} pts</span>
                             <span class="block text-[9px] text-slate-500 mt-0.5">{{ $eventStart->format('H:i') }}–{{ $gateClosesAt->format('H:i') }}</span>
                         </div>
 
@@ -137,7 +139,7 @@
                     @if($isLateGrace)
                         <div class="mt-3 pt-3 border-t border-amber-200/80 flex items-center justify-between text-xs">
                             <span class="font-bold text-amber-900">
-                                Late Arrival Reduction (-{{ $pointsReducedBy }} pts):
+                                Half-Points Late Window (-{{ $pointsReducedBy }} pts):
                             </span>
                             <span class="font-extrabold text-amber-800">
                                 <span class="line-through text-slate-400 mr-1">{{ $basePoints }} pts</span>
@@ -146,7 +148,7 @@
                         </div>
                         <p class="text-[11px] font-bold text-rose-600 mt-1 text-center"
                            id="grace-countdown"
-                           data-closes-at="{{ $gateClosesAt->toIso8601String() }}">
+                           data-closes-at="{{ $gateClosesAt->copy()->endOfMinute()->toIso8601String() }}">
                             Calculating remaining grace time...
                         </p>
                     @endif
@@ -179,14 +181,14 @@
                             Session Started {{ $minutesLate }} Min{{ $minutesLate > 1 ? 's' : '' }} Ago — Late Grace Active
                         </p>
                         <p class="text-[11px] text-amber-800 mt-0.5">
-                            Scan the HR QR poster before <strong>{{ $gateClosesAt->format('H:i') }} EAT</strong> to enter and earn <strong>+{{ $awardedPoints }} pts</strong> ({{ $pointsReducedBy }} pts reduced from {{ $basePoints }} pts).
+                            Scan the HR QR poster by <strong>{{ $gateClosesAt->format('H:i') }} EAT</strong> to earn half points (<strong>+{{ $awardedPoints }} pts</strong>). Arrivals after {{ $gateClosesAt->format('H:i') }} receive 0 pts.
                         </p>
                     </div>
                 @else
                     <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center mb-4">
                         <p class="text-xs font-extrabold text-emerald-900">Venue Check-In Gate is Now Open!</p>
                         <p class="text-[11px] text-emerald-700 mt-0.5">
-                            Scan the printed QR poster at {{ $event->location }} before {{ $eventStart->format('H:i') }} EAT for full <strong>+{{ $awardedPoints }} pts</strong>.
+                            Scan the printed QR poster at {{ $event->location }} by {{ $eventStart->format('H:i') }} EAT for full <strong>+{{ $awardedPoints }} pts</strong>.
                         </p>
                     </div>
                 @endif
@@ -237,7 +239,7 @@
                 <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-center">
                     <p class="text-xs font-extrabold text-rose-800">Event Check-In Gate Has Closed</p>
                     <p class="text-[11px] text-rose-600 mt-1">
-                        The 10-minute late grace window ended at {{ $gateClosesAt->format('H:i') }} EAT. Contact People & Culture for assistance.
+                        The {{ $graceMins }}-minute late grace window ended at {{ $gateClosesAt->format('H:i') }} EAT (0 points after cutoff). Contact People & Culture for assistance.
                     </p>
                 </div>
             @endif

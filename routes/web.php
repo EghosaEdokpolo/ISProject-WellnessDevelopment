@@ -16,12 +16,15 @@ use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\Reports\DepartmentalExportController;
 use App\Http\Controllers\Reports\PdfExportController;
-use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// --- PUBLIC / SIGNED VENUE QR CHECK-IN ROUTES (Outside auth middleware) ---
+Route::get('/checkin/event/{event}', [CheckInController::class, 'scan'])->name('checkin.scan');
+Route::post('/checkin/event/{event}/verify-staff', [CheckInController::class, 'verifyStaffScan'])->name('checkin.scan.verify');
 
 // --- AUTHENTICATION ROUTES (Guest Access) ---
 Route::middleware('guest')->group(function (): void {
@@ -49,6 +52,7 @@ Route::middleware('auth')->group(function (): void {
 
     // --- STAFF ROUTES ---
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
@@ -66,7 +70,6 @@ Route::middleware('auth')->group(function (): void {
     // Official Event Pass & Venue Check-In Routes
     Route::get('/registrations/{registration}/ticket', [CheckInController::class, 'ticket'])->name('registrations.ticket');
     Route::get('/checkin', [CheckInController::class, 'index'])->name('checkin.index');
-    Route::get('/checkin/event/{event}', [CheckInController::class, 'scan'])->name('checkin.scan');
     Route::get('/checkin/{registration}', [CheckInController::class, 'show'])->name('checkin.show');
     Route::post('/checkin/{registration}/confirm', [CheckInController::class, 'confirm'])->name('checkin.confirm');
     Route::post('/checkin/manual', [CheckInController::class, 'manual'])->name('checkin.manual');
@@ -80,7 +83,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/rewards', [DashboardController::class, 'rewards'])->name('rewards.index');
     Route::post('/rewards/redeem', [DashboardController::class, 'redeemReward'])->name('rewards.redeem');
 
-    // Wellness Content Hub Routes (Both content.bookmark and content.save supported)
+    // Wellness Content Hub Routes
     Route::get('/content', [ContentController::class, 'index'])->name('content.index');
     Route::get('/content/{slug}', [ContentController::class, 'show'])->name('content.show');
     Route::post('/content/{slug}/bookmark', [ContentController::class, 'toggleSave'])->name('content.bookmark');
@@ -94,6 +97,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/retention-metrics', [DashboardController::class, 'retentionMetrics'])->name('retention.metrics');
         Route::get('/department-analysis', [DashboardController::class, 'departmentAnalysis'])->name('department.analysis');
         Route::get('/attendees', [DashboardController::class, 'attendees'])->name('attendees.index');
+        Route::get('/attendees/export', [DashboardController::class, 'exportAttendeesCsv'])->name('attendees.export');
         Route::post('/attendees/historical', [DashboardController::class, 'logHistoricalAttendance'])->name('attendees.historical');
 
         Route::get('/hr/feedback-logs', function () {
@@ -110,13 +114,6 @@ Route::middleware('auth')->group(function (): void {
 
         Route::get('/events/{event}/qr', QrCodeController::class)->name('events.qr');
         Route::get('/events/{event}/qr-poster', [CheckInController::class, 'poster'])->name('events.qr.poster');
-
-        // User Management
-        Route::get('/manage-users', [UserManagementController::class, 'index'])->name('hr.users.index');
-        Route::post('/manage-users', [UserManagementController::class, 'store'])->name('hr.users.store');
-        Route::post('/manage-users/import', [UserManagementController::class, 'import'])->name('hr.users.import');
-        Route::get('/manage-users/{user}/edit', [UserManagementController::class, 'edit'])->name('hr.users.edit');
-        Route::put('/manage-users/{user}', [UserManagementController::class, 'update'])->name('hr.users.update');
 
         // Settings
         Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.edit');

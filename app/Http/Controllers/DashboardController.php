@@ -14,15 +14,14 @@ use App\Models\User;
 use App\Models\WellbeingResponse;
 use App\Services\DepartmentalEngagementService;
 use App\Services\HrDashboardService;
-use App\Services\PointService;
 use App\Services\RetentionService;
 use App\Services\WellnessImpactService;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
@@ -42,6 +41,67 @@ class DashboardController extends Controller
         $staffUsers    = User::where('role', 'staff')->orderBy('name')->get();
 
         return view('hrview.hrdb_attendeetable', compact('registrations', 'events', 'staffUsers'));
+    }
+
+    public function exportAttendeesCsv(Request $request): StreamedResponse
+    {
+        $query = Registration::with(['user', 'event', 'waiver', 'checkIn', 'feedback', 'wellbeingResponses'])
+            ->whereHas('user')
+            ->whereHas('event');
+
+        if ($request->filled('event_id')) {
+            $query->where('event_id', $request->event_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->whereHas('user', function ($q) use ($search): void {
+                $q->where(fn ($sub) => $sub
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('staff_id', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%"));
+            });
+        }
+
+        $rows     = $query->latest('updated_at')->get();
+        $filename = 'Strathmore-WellLoop-Attendees-' . now('Africa/Nairobi')->format('Y-m-d_His') . '.csv';
+
+        return response()->streamDownload(function () use ($rows): void {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, [
+                'Staff ID', 'Staff Name', 'School / Department', 'Event', 'Event Date',
+                'Attended', 'Waiver Consent', 'Feedback Submitted', 'WHO-5 Pre', 'WHO-5 Post',
+                'WHO-5 Lift', 'Current Points', 'Status',
+            ]);
+
+            foreach ($rows as $reg) {
+                $pre  = $reg->wellbeingResponses->whereIn('stage', ['pre', 'baseline'])->first();
+                $post = $reg->wellbeingResponses->firstWhere('stage', 'post');
+                $lift = ($pre && $post) ? ((int) $post->total_score - (int) $pre->total_score) : '';
+
+                fputcsv($out, [
+                    $reg->user->staff_id,
+                    $reg->user->name,
+                    $reg->user->department,
+                    $reg->event->name,
+                    $reg->event->starts_at?->format('Y-m-d H:i') ?? '',
+                    ($reg->checkIn || in_array($reg->status, ['checked_in', 'completed'], true)) ? 'Yes' : 'No',
+                    ($reg->waiver || $reg->consent_given) ? 'Yes' : 'No',
+                    ($reg->feedback || $reg->status === 'completed') ? 'Yes' : 'No',
+                    $pre->total_score ?? '',
+                    $post->total_score ?? '',
+                    $lift,
+                    (int) ($reg->user->points_balance ?? 0),
+                    strtoupper(str_replace('_', ' ', (string) $reg->status)),
+                ]);
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 
     public function logHistoricalAttendance(Request $request): RedirectResponse
@@ -107,7 +167,7 @@ class DashboardController extends Controller
             }
 
             if ($request->boolean('award_pts', true)) {
-                $checkinPts = (int) ($event->points_checkin ?? 25);
+                $checkinPts = (int) ($event->points_checkin ?? 20);
                 if (! PointsTransaction::where('registration_id', $registration->id)->where('reason', 'attended_event')->exists()) {
                     PointsTransaction::create([
                         'user_id'         => $user->id,
@@ -120,97 +180,34 @@ class DashboardController extends Controller
             }
         });
 
-        Cache::forget('hr_overview_data_v21');
-        Cache::forget('hr_impact_data_v6_');
-        Cache::forget('hr_impact_data_v6_' . $event->category);
+        Cache::forget((string) config('wellloop.cache.hr_overview_key', 'hr_overview_data_v21'));
+        $prefix = (string) config('wellloop.cache.hr_impact_prefix', 'hr_impact_data_v6_');
+        Cache::forget($prefix);
+        Cache::forget($prefix . $event->category);
 
         return redirect()->route('attendees.index')
             ->with('success', "Historical attendance logged for {$user->name} ({$event->name}).");
     }
 
-    /**
-     * Step 3: Live Rewards Standing, Department Leaderboard Switcher, & Event-Synced Recent Activity Feed.
-     */
     public function rewards(Request $request): View
     {
         $me = $request->user();
         $tz = (string) config('wellloop.timezone', 'Africa/Nairobi');
 
-        // Backfill any missing attendance or feedback point transactions for seeded/verified registrations
         $myRegs = Registration::with(['event', 'checkIn', 'feedback', 'waiver'])
             ->where('user_id', $me->id)
             ->get()
             ->filter(fn (Registration $r): bool => $r->event !== null);
 
-        foreach ($myRegs as $reg) {
-            $evStart = $reg->event->starts_at ?? now();
-
-            if ($reg->checkIn !== null || in_array($reg->status, ['checked_in', 'completed'], true)) {
-                $existsAtt = PointsTransaction::where('registration_id', $reg->id)
-                    ->where('reason', 'attended_event')
-                    ->exists();
-
-                if (! $existsAtt) {
-                    $tx = PointsTransaction::create([
-                        'user_id'         => $me->id,
-                        'registration_id' => $reg->id,
-                        'reason'          => 'attended_event',
-                        'points'          => (int) ($reg->event->points_checkin ?? 25),
-                    ]);
-                    $tx->timestamps = false;
-                    $tx->created_at = $reg->checkIn?->checked_in_at ?? $evStart;
-                    $tx->updated_at = $reg->checkIn?->checked_in_at ?? $evStart;
-                    $tx->save();
-                }
-            }
-
-            if ($reg->status === 'completed' || $reg->feedback !== null) {
-                $existsFb = PointsTransaction::where('registration_id', $reg->id)
-                    ->where('reason', 'feedback_submitted')
-                    ->exists();
-
-                if (! $existsFb) {
-                    $tx = PointsTransaction::create([
-                        'user_id'         => $me->id,
-                        'registration_id' => $reg->id,
-                        'reason'          => 'feedback_submitted',
-                        'points'          => (int) ($reg->event->points_feedback ?? 10),
-                    ]);
-                    $tx->timestamps = false;
-                    $tx->created_at = $reg->feedback?->created_at ?? $evStart->copy()->addHours(2);
-                    $tx->updated_at = $reg->feedback?->created_at ?? $evStart->copy()->addHours(2);
-                    $tx->save();
-                }
-            }
-        }
-
-        // Recalculate accurate live points balance from ledger
-        $netLedgerBalance = (int) PointsTransaction::where('user_id', $me->id)->sum('points');
-        if ($netLedgerBalance >= 0 && (int) $me->points_balance !== $netLedgerBalance) {
-            $me->update(['points_balance' => $netLedgerBalance]);
-        }
-
-        // Department Leaderboard with Switcher Support
-        $allDepartments = User::where('role', 'staff')
-            ->whereNotNull('department')
-            ->distinct()
-            ->orderBy('department')
-            ->pluck('department')
-            ->all();
-
-        $selectedDept = (string) $request->query('dept', (string) $me->department);
-
-        $leaderboardQuery = User::where('role', 'staff')
+        // Strictly scoped to the logged-in staff member's own school/department
+        $leaderboard = User::where('role', 'staff')
+            ->where('department', $me->department)
             ->orderByDesc('points_balance')
-            ->orderBy('name');
+            ->orderBy('name')
+            ->limit(10)
+            ->get();
 
-        if ($selectedDept !== '' && $selectedDept !== 'all') {
-            $leaderboardQuery->where('department', $selectedDept);
-        }
-
-        $leaderboard = $leaderboardQuery->limit(10)->get();
-
-        // Use cumulative earned points for Appraisal Tier standing so redeeming rewards doesn't demote staff
+        // Lifetime points (all positive ledger entries) preserve Appraisal Tier
         $cumulativeEarned = (int) PointsTransaction::where('user_id', $me->id)
             ->where('points', '>', 0)
             ->sum('points');
@@ -220,23 +217,22 @@ class DashboardController extends Controller
             $tier      = 'Gold';
             $nextTier  = 'Max Level';
             $progress  = 100;
-            $tierColor = 'text-amber-800 bg-amber-100 border-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.5)]';
+            $tierColor = 'text-amber-800 bg-amber-100 border-amber-300';
             $tierIcon  = '👑';
         } elseif ($tierPoints >= 100) {
             $tier      = 'Silver';
             $nextTier  = 'Gold';
             $progress  = (int) min(100, round((($tierPoints - 100) / 100) * 100));
-            $tierColor = 'text-slate-700 bg-slate-200 border-slate-300 shadow-[0_0_10px_rgba(203,213,225,0.5)]';
+            $tierColor = 'text-slate-700 bg-slate-200 border-slate-300';
             $tierIcon  = '⭐';
         } else {
             $tier      = 'Bronze';
             $nextTier  = 'Silver';
             $progress  = (int) min(100, round(($tierPoints / 100) * 100));
-            $tierColor = 'text-orange-800 bg-orange-100 border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.3)]';
+            $tierColor = 'text-orange-800 bg-orange-100 border-orange-300';
             $tierIcon  = '🔥';
         }
 
-        // Map registrations by ID so Recent Activity works even without eager-loading relationships
         $regsById = $myRegs->keyBy('id');
 
         $recentTransactions = PointsTransaction::where('user_id', $me->id)
@@ -262,6 +258,7 @@ class DashboardController extends Controller
                     'attended_event'     => 'Venue Check-In Verified',
                     'feedback_submitted' => 'Post-Event WHO-5 Submitted',
                     'waiver_signed'      => 'Event Registration & Waiver',
+                    'annual_cycle_reset' => 'Annual Academic Cycle Reset',
                     default              => str_starts_with((string) $tx->reason, 'redeemed_')
                         ? 'Reward Redeemed: ' . ucwords(str_replace(['redeemed_', '_'], ['', ' '], (string) $tx->reason))
                         : ucwords(str_replace('_', ' ', (string) $tx->reason)),
@@ -283,8 +280,6 @@ class DashboardController extends Controller
         return view('dashboard.rewards', compact(
             'me',
             'leaderboard',
-            'allDepartments',
-            'selectedDept',
             'tier',
             'nextTier',
             'progress',
@@ -328,7 +323,7 @@ class DashboardController extends Controller
             ]);
         });
 
-        Cache::forget('hr_overview_data_v21');
+        Cache::forget((string) config('wellloop.cache.hr_overview_key', 'hr_overview_data_v21'));
 
         return redirect()->route('rewards.index')
             ->with('success', "Redemption submitted for \"{$data['reward_title']}\" (-{$cost} pts). People & Culture has been notified.");
@@ -337,7 +332,7 @@ class DashboardController extends Controller
     public function eventmanagement(): View
     {
         $tz               = (string) config('wellloop.timezone', 'Africa/Nairobi');
-        $lateGraceMinutes = (int) config('wellloop.checkin.late_grace_minutes', 10);
+        $lateGraceMinutes = (int) config('wellloop.checkin.late_grace_minutes', 15);
         $cutoff           = now($tz)->subMinutes($lateGraceMinutes);
 
         $events = Event::withCount(['registrations', 'checkIns'])
@@ -366,9 +361,73 @@ class DashboardController extends Controller
             $lowestDim  = $sorted->keys()->last();
         }
 
+        // Chronological Monthly WHO-5 Pre/Post aggregation (respects active category filter)
+        $tz = (string) config('wellloop.timezone', 'Africa/Nairobi');
+
+        $regsQuery = Registration::with(['event', 'wellbeingResponses'])
+            ->whereHas('event', function ($q) use ($category): void {
+                $q->whereNotNull('starts_at');
+                if ($category !== null && $category !== '') {
+                    $q->where('category', strtolower((string) $category));
+                }
+            });
+
+        $buckets = [];
+
+        foreach ($regsQuery->get() as $reg) {
+            $pre  = $reg->wellbeingResponses->whereIn('stage', ['pre', 'baseline'])->first();
+            $post = $reg->wellbeingResponses->firstWhere('stage', 'post');
+
+            if (! $pre || ! $post || ! $reg->event?->starts_at) {
+                continue;
+            }
+
+            $eventDate = $reg->event->starts_at->copy()->shiftTimezone($tz);
+            $monthKey  = $eventDate->format('Y-m');
+
+            if (! isset($buckets[$monthKey])) {
+                $buckets[$monthKey] = [
+                    'key'       => $monthKey,
+                    'year'      => $eventDate->format('Y'),
+                    'short'     => $eventDate->format('M'),
+                    'full'      => $eventDate->format('F Y'),
+                    'pre_sum'   => 0.0,
+                    'post_sum'  => 0.0,
+                    'responses' => 0,
+                    'event_ids' => [],
+                ];
+            }
+
+            $buckets[$monthKey]['pre_sum']   += (float) $pre->total_score;
+            $buckets[$monthKey]['post_sum']  += (float) $post->total_score;
+            $buckets[$monthKey]['responses'] += 1;
+            $buckets[$monthKey]['event_ids'][$reg->event_id] = true;
+        }
+
+        ksort($buckets);
+
+        $distinctYears = collect($buckets)->pluck('year')->unique()->count();
+
+        $monthlyTrend = collect($buckets)->map(function (array $b) use ($distinctYears): array {
+            $count   = max(1, $b['responses']);
+            $preAvg  = round($b['pre_sum'] / $count, 1);
+            $postAvg = round($b['post_sum'] / $count, 1);
+
+            return [
+                'month'        => $distinctYears > 1 ? ($b['short'] . " '" . substr($b['year'], -2)) : $b['short'],
+                'full_label'   => $b['full'],
+                'pre_avg'      => $preAvg,
+                'post_avg'     => $postAvg,
+                'lift'         => round($postAvg - $preAvg, 1),
+                'responses'    => $b['responses'],
+                'events_count' => count($b['event_ids']),
+            ];
+        })->values()->all();
+
         return view('hrview.hrdb_impact', [
             'categories'     => $categoriesData,
             'eventTable'     => $service->eventTable($category),
+            'monthlyTrend'   => $monthlyTrend,
             'activeCategory' => $category,
             'highestDim'     => $highestDim,
             'lowestDim'      => $lowestDim,
@@ -387,16 +446,13 @@ class DashboardController extends Controller
 
     public function settings(): View
     {
-        $month = (int) date('n');
-        $year  = (int) date('Y');
-
+        $month      = (int) date('n');
+        $year       = (int) date('Y');
         $cycleStart = $month >= 9 ? $year : $year - 1;
         $cycleEnd   = $cycleStart + 1;
         $semester   = ($month >= 9 || $month <= 1) ? 1 : 2;
 
-        $liveStaffBalanceSum = (int) User::where('role', 'staff')->sum('points_balance');
-        $positiveTxSum       = (int) PointsTransaction::where('points', '>', 0)->sum('points');
-        $totalActivePoints   = $liveStaffBalanceSum > 0 ? $liveStaffBalanceSum : $positiveTxSum;
+        $totalActivePoints = (int) User::where('role', 'staff')->sum('points_balance');
 
         $points = [
             'current_academic_year' => "{$cycleStart}/{$cycleEnd}",
@@ -430,7 +486,11 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Settings updated successfully!');
     }
 
-    public function resetPoints(Request $request, PointService $pointService): RedirectResponse
+    /**
+     * Future-proof Double-Entry Ledger Reset:
+     * Inserts an offsetting negative transaction so spendable balances become 0 while preserving full audit & lifetime history.
+     */
+    public function resetPoints(Request $request): RedirectResponse
     {
         $request->validate([
             'confirmation' => ['required', 'string', 'in:RESET,reset'],
@@ -438,7 +498,27 @@ class DashboardController extends Controller
             'confirmation.in' => 'You must type RESET in the confirmation box to zero staff point balances.',
         ]);
 
-        $count = $pointService->resetAll();
+        $affected = 0;
+
+        DB::transaction(function () use (&$affected): void {
+            $staffWithPoints = User::where('role', 'staff')
+                ->where('points_balance', '>', 0)
+                ->get();
+
+            foreach ($staffWithPoints as $staff) {
+                $balance = (int) $staff->points_balance;
+
+                PointsTransaction::create([
+                    'user_id'         => $staff->id,
+                    'registration_id' => null,
+                    'reason'          => 'annual_cycle_reset',
+                    'points'          => -$balance,
+                ]);
+
+                $staff->update(['points_balance' => 0]);
+                $affected++;
+            }
+        });
 
         $month      = (int) date('n');
         $year       = (int) date('Y');
@@ -446,12 +526,12 @@ class DashboardController extends Controller
         $cycleEnd   = $cycleStart + 1;
 
         DataProcessingLog::record('points_reset', [
-            'users_affected' => $count,
+            'users_affected' => $affected,
             'academic_year'  => "{$cycleStart}/{$cycleEnd}",
         ]);
 
-        Cache::forget('hr_overview_data_v21');
+        Cache::forget((string) config('wellloop.cache.hr_overview_key', 'hr_overview_data_v21'));
 
-        return redirect()->back()->with('success', "Successfully zeroed wellness points for {$count} staff members.");
+        return redirect()->back()->with('success', "Annual cycle reset complete: zeroed spendable balances for {$affected} staff members while preserving historical lifetime points.");
     }
 }

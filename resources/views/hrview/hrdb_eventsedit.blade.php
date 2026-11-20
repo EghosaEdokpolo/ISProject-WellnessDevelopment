@@ -60,9 +60,6 @@
                     Upcoming Event • Full Edit Mode
                 </span>
             @endif
-            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-[#f5eccd]/70 text-[#8a6514] border border-[#c99a2e]/30 px-3 py-1 rounded-full">
-                Session ID #{{ $event->id }}
-            </span>
         </div>
     </div>
 

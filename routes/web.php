@@ -22,9 +22,25 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// --- PUBLIC / SIGNED VENUE QR CHECK-IN ROUTES (Outside auth middleware) ---
-Route::get('/checkin/event/{event}', [CheckInController::class, 'scan'])->name('checkin.scan');
-Route::post('/checkin/event/{event}/verify-staff', [CheckInController::class, 'verifyStaffScan'])->name('checkin.scan.verify');
+// --- PUBLIC / SIGNED VENUE QR CHECK-IN ROUTES (Outside Auth Middleware) ---
+Route::get('/checkin/event/{event}', [CheckInController::class, 'scan'])
+    ->name('checkin.scan');
+
+Route::post('/checkin/event/{event}/verify-staff', [CheckInController::class, 'verifyStaffScan'])
+    ->middleware('throttle:20,1')
+    ->name('checkin.scan.verify');
+
+Route::post('/checkin/event/{event}/guest-checkin', [CheckInController::class, 'guestCheckIn'])
+    ->middleware('throttle:10,1')
+    ->name('checkin.scan.guest');
+
+Route::post('/checkin/event/{event}/guest-verify-otp', [CheckInController::class, 'verifyGuestOtp'])
+    ->middleware('throttle:15,1')
+    ->name('checkin.scan.guest.verify');
+
+Route::post('/checkin/event/{event}/guest-resend-otp', [CheckInController::class, 'resendGuestOtp'])
+    ->middleware('throttle:5,1')
+    ->name('checkin.scan.guest.resend');
 
 // --- AUTHENTICATION ROUTES (Guest Access) ---
 Route::middleware('guest')->group(function (): void {

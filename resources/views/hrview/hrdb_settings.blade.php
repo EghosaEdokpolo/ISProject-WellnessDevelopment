@@ -22,7 +22,7 @@
     <div class="mb-8">
         <h1 class="text-2xl sm:text-3xl font-extrabold text-[#1d1d1b] tracking-tight">HR Settings & Compliance</h1>
         <p class="text-xs sm:text-sm text-slate-500 mt-1">
-            UC-15 · Points management, data protection, accessibility controls
+            Points management, data protection, accessibility controls
         </p>
     </div>
 
